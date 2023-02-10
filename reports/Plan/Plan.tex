@@ -1,0 +1,111 @@
+\documentclass[11pt]{article}
+\usepackage[mathletters]{ucs}
+\usepackage[utf8x]{inputenc}
+%https://tex.stackexchange.com/a/34609
+
+\voffset=-2cm
+%\voffset=-3cm
+\hoffset=-1.5cm
+\textwidth=16cm
+\textheight=23cm
+
+\usepackage{amsthm}
+\usepackage{amssymb,amsmath}
+\usepackage[notref]{showkeys}
+\usepackage{algorithm}
+\usepackage{todonotes}
+
+
+\newcommand\task[1]{\todo[inline]{Task : #1}}
+\newcommand\opteasy[1]{\todo[inline,color=green!20]{Optional (easy) : #1}}
+\newcommand\optmedium[1]{\todo[inline,color=blue!20]{Optional (medium) : #1}}
+\newcommand\opthard[1]{\todo[inline,color=red!20]{Optional (hard) : #1}}
+
+\def\opt{\textcolor{blue}{\it Optional : }}
+
+%\def\LatexShortcuts{../../../../Templates/BasicDocument/LatexShortcuts/}
+%\input{\LatexShortcuts CalligraphicLetters}
+%\input{\LatexShortcuts TheoremsEng_nocrefname}
+%\input{\LatexShortcuts Operators_unicode}
+
+\usepackage[capitalize]{cleveref} 
+% Any of the following lines produces an infinite loop if TexpadLive is used
+%\crefname{equation}{}{}
+%\crefname{section}{\S\kern-0.7ex}{\S\kern-0.7ex} 
+%\crefname{appendix}{\S\kern-0.7ex}{\S\kern-0.7ex} 
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{notation}[theorem]{Notation}
+\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem*{proposition*}{Proposition}
+\newtheorem*{theorem*}{Theorem}
+
+\def\bR{\mathbb{R}}
+\def\bU{\mathbb{U}}
+\def\bZ{\mathbb{Z}}
+\def\cO{\mathcal{O}}
+\def\gF{\mathfrak{F}}
+\def\sm{\setminus}
+\def\ve{\varepsilon}
+
+
+%latex_to_unicode=False
+% The script latex_to_unicode.py will not tamper with this part of the document.
+%latex_to_unicode=True
+
+\usepackage{url}
+
+\title{Formalisation of the fast-marching algorithm,\\ and of the causality property}
+
+\author{Jean-Marie Mirebeau\footnote{
+Universit\'e Paris-Saclay, ENS Paris-Saclay, CNRS, Centre Borelli, F-91190 Gif-sur-Yvette, France.
+}}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+
+\end{abstract}
+
+\todo[inline]{Work in progress : plan for the internship}
+
+The fast-marching algorithm \cite{sethian1996fast,Tsitsiklis:1995EfficientTrajectories} allows to numerically compute the arrival time of a front in a domain of $\bR^d$, in the presence of obstacles, and where the front speed is dictated locally. It has countless applications, in robotic motion planning, image segmentation, seismic traveltime tomography, etc Since its introduction, it has been extended to the computation of shortest paths on manifolds \cite{Kimmel:1998Manifold,Bronstein2007Weighted}, or in domains equipped with various types of anisotropy \cite{Sethian2003OUM,mirebeau2019riemannian}. 
+
+
+From the algorithmical standpoint, the fast marching algorithm is a generalization of Dijkstra's shortest path algorithm on graph, and from the analysis standpoint it solves a discretization of the eikonal equation
+\begin{align*}
+	\forall x &\in \Omega, \|\nabla u(x)\| = c(x),&  \forall x &\in \partial \Omega, u(x)=u_0(x),
+\end{align*}
+with $c \in C^0( \Omega , ]0,\infty[)$ and $u_0 : \partial \Omega \to ]-\infty,\infty]$. The solutions should be understood in the viscosity sense. 
+
+The objective of this internship is to formalize the abstract fast marching algorithm, at least one of the two original instantiations \cite{sethian1996fast,Tsitsiklis:1995EfficientTrajectories}, and the proof of convergence of the numerical solution. There are a number of optional openings towards related subjects. 
+The report should include a discussion of the various choices and challenges encountered when formalizing the project, as well as a presentation of the main proofs using the lean formatter\footnote{Found here : \url{https://github.com/leanprover-community/format_lean}}, which allows to write formal proofs and standard Latex proofs along each other\footnote{Example : \url{https://www.ma.imperial.ac.uk/~buzzard/docs/lean/sandwich.html}}. 
+
+\task{describes an objective that is part of the main goals of the internship}
+\opteasy{optional task, not expected to raise significant challenges. Intended as an immediate illustration of the main objectives.}
+\optmedium{an optional task, with medium expected difficulty. Intended as an application of the main objectives, or a natural connection with another formalism.}
+\opthard{an optional task, with possibly significant difficulty. Intended as an extension of the main objectives.}
+
+\section{Abstract schemes and their solutions}
+\label{sec:abstract}
+\input{Include/Abstract.tex}
+
+\section{Discretizations of the eikonal equation}
+\label{sec:discretization}
+\input{Include/Discretization.tex}
+
+\section{Convergence analysis}
+\label{sec:convergence}
+\input{Include/Convergence.tex}
+
+
+\bibliographystyle{alpha}
+\bibliography{Include/Papers.bib}
+
+\end{document}

@@ -1,0 +1,55 @@
+\documentclass[11pt]{article}
+\usepackage[mathletters]{ucs}
+\usepackage[utf8x]{inputenc}
+%https://tex.stackexchange.com/a/34609
+
+\voffset=-4cm
+%\voffset=-3cm
+\hoffset=-1.5cm
+\textwidth=16cm
+\textheight=25.5cm
+
+\usepackage{amsthm}
+\usepackage{amssymb,amsmath}
+%\usepackage[notref]{showkeys}
+
+%latex_to_unicode=False
+% The script latex_to_unicode.py will not tamper with this part of the document.
+%latex_to_unicode=True
+
+\usepackage{url}
+
+\title{Formalisation de l'algorithme du fast marching,\\ et du principe de causalité}
+
+\author{Jean-Marie Mirebeau, Floris van Doorn}
+
+%\author{Jean-Marie Mirebeau\footnote{
+%Universit\'e Paris-Saclay, ENS Paris-Saclay, CNRS, Centre Borelli, F-91190 Gif-sur-Yvette, France.
+%}, Floris van Doorn\footnote{Laboratoire de mathematiques d'Orsay, Post-Doctorant}}
+
+\begin{document}
+\maketitle
+
+L'algorithme du \emph{Fast-Marching} \cite{sethian1996fast,Tsitsiklis:1995EfficientTrajectories}
+ permet de calculer le trajet de durée minimale dans un domaine continu, étant données les vitesses de déplacement en chaque point, et d'éventuels obstacles. Ses applications sont nombreuses, dans le cadre de la planification de mouvement, de la segmentation d'images, ou encore de la tomographie sismique. Depuis son introduction, une série continue de travaux de recherche on permis de l'étendre au calcul de chemins minimaux sur des surfaces, sur des domaines munis de divers types d'anisotropie (i.e. il est plus rapide de se déplacer dans certaines directions que dans d'autres) \cite{Sethian2003OUM,mirebeau2019riemannian}, ou encore en pénalisant la courbure du chemin en plus de sa longueur \cite{mirebeau2018fast}. Il correspond à la résolution numérique d'une discrétisation de l'équation aux dérivées partielles dite eikonale, qui est non-linéaire et d'ordre un. 
+ 
+L'algorithme du fast-marching est fondé informellement sur les deux principes suivants:
+\begin{itemize}
+	\item (Monotonie) En partant plus tard, on arrive plus tard. 
+	\item (Causalité) La date d'arrivée en un point s'exprime en fonction des dates d'arrivée antérieures. 
+\end{itemize}
+On peut donner un sens précis à ces propriétés, et établir diverses équivalences dans les instantiations particulières de l'algorithme du fast marching. Par exemple, sur un graphe (où il se réduit à l'algorithme de Dijkstra), ou sur une surface triangulée, la causalité est équivalente à:
+\begin{itemize}
+	\item (Causalité' - cas d'un graphe) Les arêtes du graphe sont de poids positif.
+	\item (Causalité'' - cas d'une surface triangulée) Tous les triangles sont aigus. 
+\end{itemize}
+
+La \emph{formalisation des mathématiques}, via les assistants de preuve, est un projet de long terme et de grande envergure. Il fait partie d'un effort de recherche reproductible, dont les avantages sont en autres de certifier les résultats, de vérifier facilement si on peut en modifier ou affaiblir les hypothèses, et de les indexer et donc de les suggérer automatiquement dans des contextes appropriés. Elle nécessite un effort substantiel par rapport aux mathématiques 'papier et crayon', qui est cependant en voie d'être allégé par le développement de tactiques standard permettant à l'assistant d'établir de lui même les points faciles, ainsi que de modèles de machine learning entrainés sur les bases existantes de preuves. 
+
+Les mathématiques les plus couramment formalisées sont liées à l'algèbre, la logique et la certification de programmes. Cependant la communauté s'étend rapidement vers d'autres champs mathématiques, et notamment l'analyse \cite{van2023formalising}, via le développement de mathlib dans le langage Lean que nous utiliserons\footnote{https://leanprover-community.github.io}. L'algorithme du fast marching se rattache d'une part à l'algorithme de Dijkstra, qui est formalisé depuis longtemps, et d'autre part à l'analyse, la convexité, le contrôle optimal et les équations au dérivées partielles de Hamilton-Jacobi-Bellman, qui sont à la frontière de ces techniques. Le stage propose sa formalisation, ainsi que celle des propriétés de causalité associés. Cette phase achevée et si le temps le permet, on pourra se diriger au choix vers la formalisation de la notion de solution de viscosité de l'équation eikonale (obtenue dans la limite $h \to 0$), soit vers un travail original sur l'affaiblissement de la propriété de causalité. 
+
+
+\bibliographystyle{alpha}
+\bibliography{Papers.bib}
+
+\end{document}

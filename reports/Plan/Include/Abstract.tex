@@ -1,0 +1,385 @@
+
+Part of this section is copy-pasted from \cite[Appendix A]{mirebeau2019riemannian}.
+Concepts and arguments closely related with Definition \ref{def:MonotoneOperator} and Proposition \ref{prop:SinglePass} can be found in \cite{Tsitsiklis:1995EfficientTrajectories, Kimmel:1998Manifold,Sethian2003OUM,bertsekas1995dynamic}. See in particular the definition of the causality property in \cite{Sethian2003OUM}, and the proof that a stochastic shortest path problem on a graph can be solved in a single pass if there exists an optimal consistently improving policy in \cite[chapter 2]{bertsekas1995dynamic}.
+
+
+\subsection{Fixed point formalism}
+
+Throughout this section, we fix a finite set $X$, and denote by
+\begin{equation*}
+	\bU := ]-\infty,+\infty]^X
+\end{equation*}
+the set of functions on $X$ with either real of $+\infty$ values. Here and below, for any $u,v \in \bU$, the notation $u \preceq v$ means $u(x) \leq v(x)$ for all $x \in X$.
+
+\task{Define the objects $X$ and $\bU$ in Lean. Define the partial order relation on $\bU$.}
+
+For any $u \in \bU$, and any $t \in [-\infty,+\infty]$, we define  the function $u^{<t} \in \bU$ (resp. $u^{\leq t} \in \bU$) by replacing all values above (resp.\ strictly above) the threshold $t$ with $+\infty$. Explicitly, for all $x \in X$, 
+\begin{equation*}
+	u^{<t}(x) := 
+	\begin{cases}
+		u(x) &\text{if } u(x) < t,\\
+		+\infty &\text{otherwise}.
+	\end{cases}
+\end{equation*}
+
+\task{Choose a syntactically valid Lean notation for $u^{< \lambda}$ and $u^{\leq \lambda}$, and define these objects in lean.}
+
+We next introduce the concept of Monotone and Causal operator on the set $X$. 
+%Note that we distinguish the concept of numerical scheme $F$, where the objective is to find a root: $F u =0$, and of operator $\Lambda$, where the objective is to find a fixed point: $\Lambda u = u$, denoting by $u$ the unknown. %An operator $\Lambda$ is often defined as the Gauss-Siedel update associated with the scheme $F$.
+
+\begin{definition}
+\label{def:MonotoneOperator}
+	An operator on the set $X$ is a map $\Lambda : \bU \to \bU$. Its is said 
+	\begin{itemize}
+	\item \emph{Monotone}, iff for all $u,v \in \bU$ 
+	such that $u \preceq v$ one has $\Lambda u \preceq \Lambda v$.
+	\item \emph{Causal}, iff for all $u,v \in \bU$ and $t \in [-\infty,+\infty]$ 
+	s.t.\ $u^{<t} = v^{<t}$ one has $ (\Lambda u)^{\leq t} = (\Lambda v)^{\leq t}$.
+	\end{itemize}
+\end{definition}
+
+\todo[inline]{Formalize the monotony and causality concepts.}
+
+\begin{proposition}[Graph setting]
+\label{prop:graph_operator}
+Let $X_0 \subset X$, let $u_0 : X_0 \to ]-\infty,\infty]$, and let $c : (X\sm X_0) \times X \to ]-\infty,\infty]$. For all $u\in \bU$ define 
+\begin{align}
+\label{eq:graph_operator}
+	\forall x &\in X \sm X_0,\ 
+	\Lambda u(x) := \min_{y \in X} \Big(c(x,y) + u(y)\Big), &
+	\forall x &\in X_0,\ 
+	\Lambda u(x) = u_0(x).
+\end{align}
+Then $\Lambda$ is monotone. In addition, $\Lambda$ is causal $\Leftrightarrow$ ($c(x,y) > 0$ for all $x \in X\sm X_0$, $y \in X$). 	
+\end{proposition}
+
+\opteasy{Prove and formalize \cref{prop:graph_operator}.}
+
+\optmedium{Express (\ref{eq:graph_operator}, left) as the matrix product $c u$ in the $(\min,+)$ algebra.}
+
+\begin{remark}[Interpretation of monotony and causality]
+A mapping $u \in \bU$ should be interpreted as a collection of arrival times at the points of $X$. 
+The operator value $\Lambda u(x)$ at $x \in X$ should be interpreted as the earliest possible arrival time at $x\in X$, given the rules encoded in the operator $\Lambda$, and the initial starting times $u$.
+Thus one can rephrase informally the monotony and causality axioms of \cref{def:MonotoneOperator} : 
+\begin{itemize}
+	\item (Monotone) By starting earlier, one arrives earlier.
+	\item (Causal) The arrival time at a point can be expressed in terms of earlier arrival times.
+\end{itemize}
+\end{remark}
+
+\subsubsection{The fast marching algorithm}
+
+
+
+
+The fast marching method, presented in abstract form in Algorithm \ref{algo:FastMarching}, computes in a finite number of steps a fixed point of such an operator, see Proposition \ref{prop:SinglePass}.
+
+%An informal reformulation of the causality property is as follows: the arrival times before time $t$ (inclusive) only depend on strictly earlier arrival times.
+%By convention, the minimum of the empty set is defined as $+\infty$.
+\begin{algorithm}
+\caption{Abstract fast marching method}
+\label{algo:FastMarching}
+\textbf{Initialization } $n \gets 0$, $t_0 \gets -\infty$, and $u_0 \gets +\infty$ on $X$.\\
+\textbf{While } $t_n< \infty$ \textbf{ do }
+\begin{align*}
+	u_{n+1} &\gets \Lambda u_n^{\leq t_n}, &
+	t_{n+1} &:= \min\{ u_{n+1}(x);\ x \in X, \, u_{n+1}(x)> t_n\}, &
+	n &\gets n+1.
+\end{align*}
+\end{algorithm}
+
+\task{Present a formal proof of this result (termination of the fast marching method)}
+
+\begin{proposition}
+\label{prop:SinglePass}
+	Let $\Lambda$ be a monotone and causal operator on a finite set $X$, to which the fast marching method is applied, see Algorithm \ref{algo:FastMarching}.
+	Then for some $N< \#(X)$ one has $t_N = +\infty$, so that the algorithm terminates, and one has $\Lambda u_N = u_N$. Furthermore, $u_n \succeq u_{n+1}$ and $u_n^{\leq t_n} = u_{n+1}^{\leq t_n}$ for each $0 \leq n\leq N$.
+\end{proposition}
+
+\begin{proof}
+%Consider two successive iterations of rank $n$ and $n+1$, and note that $t_n < t_{n+1}$ by definition of $t_{n+1}$. We begin with two proofs by induction.
+Note that $t_n \leq t_{n+1}$ for all $0 \leq n < N$, by definition of $t_{n+1}$.
+We begin with the proof of the last two announced properties, by induction over $n \in \{0, \cdots, N\}$. 
+
+\emph{Claim: $u_n \succeq u_{n+1}$.} Initialization holds since $u_0 \equiv +\infty \succeq u_1$. Then, for $n\geq 1$, we obtain by induction and Monotony of the operator $\Lambda$
+\begin{equation*}
+	(u_{n-1} \succeq u_n \text{ and } t_{n-1} \leq t_n) \ \Rightarrow \
+	u_{n-1}^{\leq t_{n-1}} \succeq u_n^{\leq t_n} \ \Rightarrow \
+	\Lambda u_{n-1}^{\leq t_{n-1}} \succeq \Lambda u_n^{\leq t_n} \ \Leftrightarrow \
+	u_n \succeq u_{n+1}.
+\end{equation*}
+
+\emph{Claim: $u_n^{\leq t_n} = u_{n+1}^{\leq t_n}$.} Initialization follows from $t_0 = -\infty$. Then, for $n\geq 1$, we obtain
+\begin{align*}
+	u_{n-1}^{\leq t_{n-1}}  &= (u_{n-1}^{\leq t_{n-1}})^{<t_n}, &
+	u_n^{\leq t_{n-1}} &= u_n^{<t_n} = (u_n^{\leq t_n})^{<t_n},
+\end{align*}
+by definition of $t_n$.
+Therefore, by induction and Causality of the operator $\Lambda$, we obtain
+\begin{equation*}
+	(\Lambda u_{n-1}^{\leq t_{n-1}})^{\leq t_n} = (\Lambda u_n^{\leq t_n})^{\leq t_n} \ \Leftrightarrow \
+	u_n^{\leq t_n} = u_{n+1}^{\leq t_n}.
+\end{equation*}
+
+Conclusion of the proof. The sets $X_n := \{x \in X; \, u_n(x) \leq t_n\}$ are strictly increasing for inclusion as $n$ increases, by the above, and are included in the finite domain $X$. The algorithm therefore terminates, in at most $\#(X)$ iterations. In the last step we have $t_N = +\infty$ and thus $u_N = u_N^{\leq t_N} = u_{N+1}^{\leq t_N} = u_{N+1} = \Lambda u_N$.
+\end{proof}
+
+
+\begin{remark}[Complexity of the fast marching algorithm]
+The fast marching algorithm requires to evaluate $\Lambda u_n^{\leq t_n}$ and $\Lambda u_{n+1}^{\leq t_{n+1}}$ in consecutive iterations of rank $n$ and $n+1$.
+Observe that  the maps $u_{n+1}^{\leq t_{n+1}}$ and $u_n^{\leq t_n} = u_{n+1}^{\leq t_n}$ 
+differ only at the points $A_{n+1} = \{x\in X;\, u_{n+1}(x)=t_{n+1}\}$ which have been Accepted in this iteration (typically a single point).
+Therefore the recomputation of the operator $\Lambda$ can be restricted to the points $x \in X$ such that $\Lambda u(x)$ depends on $u(y)$ for some $y \in A_{n+1}$.
+Since each point is Accepted only once, and assuming that the operator $\Lambda$ is defined as the Gauss-Siedel update of a numerical scheme with a bounded stencil, the overall number of elementary local evaluations of the operator $\Lambda$ (regarded as of unit complexity) in the course of the fast marching algorithm is $\cO(K M)$ where $K = \#(X)$ and $M$ is the average stencil size.
+
+The overall optimal complexity of the fast marching algorithm is $\cO(K M + K \ln K)$, where the second term comes from the cost of maintaining a Fibonacci heap of all the Considered points, see e.g.\ Remark 1.7 in \cite{Mirebeau:2014EfficientFinsler}.
+
+A linear complexity $\cO(KM)$ can be achieved under a strengthened and quantitative variant of the causality property, using a variant of Dial's algorithm, see \cite{Tsitsiklis:1995gh,Vladimirsky:2008LabelSetting}.
+\end{remark}
+
+
+A variant of the fast marching algorithm is described in the seminal paper \cite{Tsitsiklis:1995EfficientTrajectories}, under a stronger causality assumption. This algorithm does not require a priority queue, and as a result the complexity is $\cO(K (\max u_* - \min u_*)/\delta)$, where $u_*$ is the solution, under standard assumptions (instead of $\cO(K \ln K)$ for the usual fast marching method). 
+
+\begin{algorithm}
+\caption{Abstract fast marching method, with untidy queue and $\delta$-causality}
+\label{algo:FastMarching2}
+\textbf{Initialization } $u_0 \gets +\infty$ on $X$, $t_0 \gets \min\{\Lambda u_0(x)\mid x \in X\}$.\\
+\textbf{For all} $n \geq 0$
+%\textbf{While } $u_n \neq u_{n+1}$ \textbf{ do }
+\begin{align*}
+	t_n &\gets t_0 + n \delta, &
+	u_{n+1} & \gets \Lambda u_n^{\leq t_n}, &
+%	u_{n+1} &\gets \Lambda u_n^{\leq t_n}, &
+%	t_{n+1} &:= \min\{ u_{n+1}(x);\ x \in X, \, u_{n+1}(x)> t_n\}, &
+	n &\gets n+1.
+\end{align*}
+\end{algorithm}
+
+
+\begin{definition}[\opt $\delta$-causality]
+An operator $\Lambda$ on $X$ is said $\delta$-causal, where $\delta\in \bR$, iff for all $u,v \in \bU$ and $t \in [-\infty,+\infty]$ 
+	s.t.\ $u^{<t} = v^{<t}$ one has $ (\Lambda u)^{\leq t+\delta} = (\Lambda v)^{\leq t+\delta}$.
+\end{definition}
+
+\opteasy{Formalize this definition}
+
+\begin{proposition}[\opt Tsitsilikis variant of the fast marching method]
+Let $\Lambda$ be $\delta_1$-causal, for some $\delta_1>0$, and let $(u_n)_{n \geq 0}$ be the iterates of \cref{algo:FastMarching2}. Then $u_n \geq u_{n+1}$, and $u_n^{\leq t_n} = u_{n+1}^{\leq t_n}$ for all $n \geq 0$. 
+
+In particular, there exists $N>0$ such that $t_N \geq \max \{u_N(x)\mid x \in X, u_N(x) < \infty\}$, 
+and one has $\Lambda u_N = u_N$ and $u_n = u_N$ for all $n \geq N$. 
+\end{proposition}
+
+\begin{proof}
+	TODO.
+\end{proof}
+
+\optmedium{Formalize the proof}
+
+
+\subsubsection{Using monotony alone (without causality)}
+
+The causality property, used by the fast marching algorithm, puts a strong constraint on the structure of the operator $\Lambda$. If the operator only satisfies the monotony property, then  it is nevertheless possible to approximate a fixed point, under mild additional assumptions.
+The simplest approach is simply to iterate the operator. More efficient variants include fast-sweeping, adaptive Gauss-Siedel iteration, fast iterative method, ...
+
+Monotony, together with mild assumptions, also allows to establish the comparison principle, which is at the foundation of the convergence analysis. 
+
+\begin{definition}
+	Let $\Lambda$ be an operator on a finite set $X$, and let $\overline u,\underline u \in \bU$. Then : 
+	\begin{itemize}
+		\item $\overline u$ is a sub-solution iff $\Lambda \overline u \geq \overline u$. 
+		(A strict super-solution if $\Lambda \overline u > \overline u$ on $X$.)
+		\item $\underline u$ is a super-solution iff $\Lambda \underline u \leq \underline u$. 
+		(A strict sub-solution if $\Lambda \overline u > \overline u$ on $X$.)
+	\end{itemize}
+	
+	An operator satisfies the comparison principle if any sub-solution $\overline u$ and super-solution $\underline u$ satisfy $\overline u \leq \underline u$. 
+\end{definition}
+
+\opteasy{Formalize these definitions. Show that an operator which satisfies the comparison principle has at most one fixed point.}
+
+\begin{proposition}[Global iteration]
+Let $\Lambda$ be a monotone and \emph{continuous} operator on $X$, and let $\overline u_0, \underline u_0 : X \to \bR$ be a finite sub-solution and a super-solution  obeying $\overline u_0 \leq \underline u_0$. Denote $\overline u_n := \Lambda^n \overline u_0$ and $\underline u_n := \Lambda^n \underline u_0$.
+Then $\overline u_0 \leq \cdots \leq \overline u_n \leq \underline u_n \leq \cdots \leq \underline u_0$ for all $n \geq 0$, and $\overline u_n$ and $\underline u_n$ converge to (possibly distinct) fixed points of $\Lambda$. 	
+
+If $\Lambda$ admits at most one fixed point (for instance if it satisfies the comparison principle), and if $\overline u_0 \leq u_0 \leq \underline u_0$, then $u_n := \Lambda^n u_0$ converges to the unique fixed point.  
+\end{proposition}
+
+\opteasy{Formalize the proof. Note that the assumption $\overline u_0 \leq \underline u_0$ is automatically satisfied if $\Lambda$ satisfies the comparison principle.}
+
+\begin{definition}
+	An operator $\Lambda$ on $X$ is sub-additive iff $\Lambda [u+t] \leq \lambda u + t$ for any $u \in \bU$, $t \geq 0$. 
+\end{definition}
+
+\opteasy{Formalize sub-additivity. Show that the operator \eqref{eq:graph_operator} associated to a graph satisfies this condition.}
+
+\begin{proposition}[Weak comparison principle]
+\label{prop:comparison}
+	Let $\Lambda$ be a monotone and sub-additive operator, and let $\overline u, \underline u \in \bU$ be a sub-solution and a super-solution. If either one is strict, then $\overline u < \underline u$ on $X$.
+%	Let $u,v \in \bU
+%	Let $u, v \in \bU$. If $u\leq \Lambda u$ and $\Lambda v \leq v$ then $u \leq v$. In addition, if either inequality is strict then $u<v$. %(resp.\ $\Lambda v \leq v$) then $u < v$ (resp.\ $u \leq v$). 
+\end{proposition}
+
+
+\begin{proof}
+%	First assume that $v< \Lambda v$. 
+	Let $x \in X$ be such that $t:=u(x)-v(x)$ is maximal, so that $u \leq v+t$ and $u(x) = v(x)+t$. Assuming that $t \geq 0$ we obtain $u(x)\leq \Lambda u(x) \leq \Lambda [v+t](x) \leq \Lambda v(x) +t \leq v(x)+t = u(x)$, by monotony and subadditivity. If either the first or last inequality is strict, we obtain a contradiction, thus $t<0$ and therefore $u<v$ as announced.
+\end{proof}
+
+\opteasy{Formalize the statement and proof}
+
+
+\begin{corollary}[Comparison principle]	
+	Let $\Lambda$ be a monotone and sub-additive operator, such that strict sub-solutions are dense in the set of super-solutions (resp. strict super-solutions are dense in the set of super-solutions). 
+	The $\Lambda$ satisfies the comparison principle.
+\end{corollary}
+
+\opteasy{Formalize the statement and proof. (Needs arguments of continuity)}
+
+\opteasy{Show that the operator \eqref{eq:graph_operator} associated to the graph setting satisfies this condition.}
+
+\subsection{Root finding formalism}
+
+
+\subsubsection{Discrete degenerate ellipticity}
+
+Part of this section is copy-pasted from \cite[Appendix A]{mirebeau2019riemannian}.
+
+\task{Formaliser la definition suivante}
+
+\begin{definition}
+	\label{def:MonotoneScheme}
+	A (finite differences) scheme on a finite set $X$ is a continuous map $\gF : \bR^X \to \bR^X$, written as
+	\begin{equation*}
+		(\gF U)(x) := \gF(x, U(x), (U(x)-U(y))_{y \in X \sm \{x\}}).
+	\end{equation*}	
+%	is a continuous map $\gF : X \times \bR \times \bR^X\to \bR$. %A scheme can be uniquely written in the following form, for all $\bx \in X$ and $U \in \bR^X$
+	The scheme is said:
+	\begin{itemize}
+		\item Degenerate elliptic iff $\gF$ is non-decreasing w.r.t.\ the second and (each of) the third variables.
+%		for each $\bx \in X$ the value $\gF U(\bx)$ is a non-decreasing function of the variables $U(\bx)$ and $(U(\bx)-U(\by))_{\by \in X}$.
+		\item Causal iff $\gF$ only depends on the positive part of (each of) the third variables.
+%		finite differences
+%		\begin{equation*}
+%			(\gF U)(x) = \gF(x,U(x),\max \{0,U(\bx)-U(\by)\}_{\by \in X}).
+%		\end{equation*}
+	\end{itemize}
+%	To the scheme is associated a function $\bR^X \to \bR^X$ still (abusively) denoted by $\gF$, and defined by 
+%	\begin{equation*}
+%		(\gF U)(\bx) := \gF(\bx, U(\bx), (U(\bx)-U(\by))_{\by \in X}),
+%	\end{equation*}
+%	for all $\bx \in X$, $U \in \bR^X$.
+	A discrete map $U \in \bR^X$ is called a sub- (resp.\ strict sub-, resp.\ super-, resp.\ strict super-) solution of scheme $\gF$  iff $\gF U \leq 0$ (resp.\ $\gF U<0$, resp.\ $\gF U\geq 0$, resp.\ $\gF U > 0$) pointwise on $X$.
+\end{definition}
+
+\begin{definition}[Graph setting]
+\label{def:graph_scheme}
+Let $X_0 \subset X$, $c : X\sm X_0 \to ]0,\infty]$, and $u_0 : X_0 \to \bR$. Define for all $u \in \bR^X$ and all $x \in X$,
+	\begin{align*}
+%	\label{bla}
+%	\label{eq:graph_scheme}
+%	1+1
+		\forall x &\in X\sm X_0,\, Fu(x) := \max_{y \in X}\Big( \frac{u(x)-u(y)}{c(x,y)} \Big)_+- 1,&
+		\forall x &\in X_0, F u(x) := u(x)-u_0(x),
+	\end{align*}
+	where $a_+ := \max \{a,0\}$. 
+\end{definition}
+
+\opteasy{Show that the scheme of \cref{def:graph_scheme} is DE and causal.}
+
+
+
+\subsubsection{Gauss-Siedel update of a scheme}
+
+The next proposition defines an operator $\Lambda$ as the local Gauss-Siedel update associated with a numerical scheme $F$. If the scheme is Degenerate elliptic then the resulting operator is Monotone, and Causality also transfers from the scheme to the operator. This property is known regarding Degenerate ellipticity/Monotony 
+\cite{Oberman2006ConvergentDifference}, but appears to be new for Causality.
+
+\task{Formaliser la proposition suivante}
+\begin{proposition}
+\label{prop:GaussSiedelCausal}
+	Let $F$ be a numerical scheme on $X$, which is degenerate elliptic in the sense of Definition \ref{def:MonotoneScheme}.
+	For each $u \in \bU$, and each $x \in X$, the mapping 
+	\begin{equation}
+	\label{eqdef:fLambda}
+		\lambda \in \bR \mapsto  f(\lambda) := F(x,\, \lambda,\, (\lambda-u(y))_{y\in X \sm\{x\}})
+	\end{equation}
+	is non-decreasing. 
+	We assume that either (i) there exists a unique $\lambda \in \bR$ such that $f(\lambda)=0$, and we set $\Lambda u(x) := \lambda$, or (ii) for all $\lambda \in \bR$ one has $f(\lambda) < 0$, and we set $\Lambda u(x) := +\infty$.
+	
+	Then $\Lambda$ is a monotone operator on $X$, in the sense of Definition \ref{def:MonotoneOperator}.
+	In addition, if the scheme $F$ is causal, then the operator $\Lambda$ is causal, in the sense of Definitions \ref{def:MonotoneScheme} and \ref{def:MonotoneOperator} respectively.	
+\end{proposition}
+
+\begin{proof}
+	The fact that \eqref{eqdef:fLambda} is non-decreasing directly follows from the degenerate ellipticity of the scheme $F$.
+	
+	\emph{Monotony of the operator $\Lambda$}. Let $u,v \in \bU$, and let $x\in X$ be arbitrary. If $u \preceq v$, then 
+	\begin{equation*}
+		F(x,\, \lambda,\, (\lambda-u(y))_{y \neq x}) \geq F(x,\, \lambda,\, (\lambda-v(y))_{y \neq x})
+	\end{equation*}
+	for all $\lambda \in \bR$, by monotony of scheme $F$. Thus $\Lambda u(x) \leq \Lambda v(x)$, as announced
+
+	\emph{Causality of the operator $\Lambda$}. Let $u,v \in \bU$, let $t \in [-\infty,\infty]$, and let $x \in X$. If $u^{<t} \equiv v^{<t}$, then 
+	\begin{equation*}
+		F(x,\lambda, \max \{0,\lambda - u(y)\}_{y \neq x}) = F(x,\lambda, \max \{0,\lambda - v(y)\}_{y \neq x})
+	\end{equation*}
+	for all $\lambda \leq t$, since indeed $\max \{0,\lambda - u(y)\} = \max \{0,\lambda - v(y)\}$. Assuming the Causality of scheme $F$, this implies $F(x,\lambda, (\lambda - u(y))_{y \neq x}) = F(x,\lambda, (\lambda - v(y))_{y \neq x})$ for all $\lambda \leq t$. Thus these two functions either (i) have a common root $\lambda\leq t$, $\lambda = \Lambda u(x) = \Lambda v(x)$, or (ii) have (possibly distinct) roots $\Lambda u(x) > t$, $\Lambda v(x)>t$. Finally $(\Lambda u)^{\leq t} = (\Lambda v)^{\leq t}$, as announced.
+\end{proof}
+
+\opteasy{Show that the Gauss-Siedel update operator of \eqref{eq:graph_scheme} is \eqref{eq:graph_operator}.}
+
+
+\subsubsection{Using monotony alone}
+
+Perron's proof of the existence of a solution.
+The following proof is adapted from \cite[Theorem 2.3]{mirebeau2019riemannian}.
+
+\begin{definition}
+	Let $F$ be a scheme on a finite set $X$, and let $\overline u,\underline u \in \bR^X$. Then : 
+	\begin{itemize}
+		\item $\overline u$ is a sub-solution iff $F \overline u \leq 0$. 
+		(A strict super-solution if $F \overline u < 0$.)
+		\item $\underline u$ is a super-solution iff $F \underline u \geq 0$. 
+		(A strict sub-solution if $F \overline u > 0$.)
+	\end{itemize}
+	
+	A scheme satisfies the comparison principle if any sub-solution $\overline u$ and super-solution $\underline u$ satisfy $\overline u \leq \underline u$. 
+\end{definition}
+
+\opteasy{Implement this definition, and show that a scheme which satisfies the comparison principle has at most one fixed point.}
+
+\begin{proposition}[Weak comparison principle]
+Let $F$ be a DDE scheme, and let $\underline u$ be a strict super-solution, and $\overline u$ a sub-solution. If either one is strict, then $\overline u < \underline u$. 
+\end{proposition}
+
+\begin{proof}
+Let $x \in X$ be such that $\overline u(x) - \underline u(x)$ is maximal, so that $\overline u(x)-\overline u(y) \geq \underline u(x)-\underline u(y)$ for any $y \in X$. Assuming for contradiction that $\overline u(x) \geq \underline u(x)$ we obtain $0\geq \gF \overline u(x) \geq \gF \underline u(x)>0$ by degenerate ellipticity of the scheme and by definition of a sub- and strict super-solution. This is a contradiction, hence $\overline u \leq \underline u$. %Next using assumption (ii) we obtain that $\overline u \leq \underline u$ still holds for any sub-solution $\overline u$ and any (possibly non-strict) super-solution $\underline u$. The uniqueness of the solution to $\gF u=0$ follows.		
+\end{proof}
+
+\opteasy{Formalize the weak comparison principle, and the comparison principle}
+
+
+\begin{corollary}[Comparison principle]
+	Let $F$ be a DDE scheme, such that the set of strict sub-solutions is dense in the set of sub-solutions (resp. the set of strict super-solutions is dense in the set of super-solutions). 
+	Then $F$ satisfies the comparison principle.
+\end{corollary}
+
+\begin{proposition}[Perron-Frobenius solution to a scheme]
+	Let $F$ be a DDE and continuous, which admits a sub-solution $\overline u$ and a super-solution $\underline u$ such that $\overline u \leq \underline u$.
+	Then $F$ admits a solution $u \in \bR^X$, satisfying $\overline u \leq u \leq \underline u$, and defined for all $x \in X$ as
+	\begin{equation}
+		u(x) := \sup\{ \tilde u(x)\mid \tilde u \text{ sub-solution}, \overline u \leq \tilde u \leq \underline u\}.
+	\end{equation}
+\end{proposition}
+
+\begin{proof}
+Note that $\tilde u := \overline u$ is a sub-solution satisfying $\overline u \leq \tilde u \leq \underline u$, hence the supremum is over a non-empty set. 
+As a result, $u$ is well defined, and $\overline u \leq u \leq \underline u$.
+
+Consider an arbitrary $x\in X$, and let $\tilde u$ be a sub-solution such that $u(x)=\tilde u(x)$, which exists by continuity of $\gF$ and a compactness argument.
+By construction $u \geq \tilde u$, hence $\gF u(x) \leq \gF \tilde u(x)\leq 0$ by monotony of the scheme, hence $u$ is a sub-solution by arbitraryness of $x\in X$. 
+
+Now, assume for contradiction that there exists $x_0 \in X$ such that $\gF u(x_0) < 0$. Then $u(x_0)< \underline u(x_0)$, since otherwise we would have $\gF u(x_0) \geq \gF\underline u(x_0)$ by monotony, which is a contradiction since $\gF\underline u(x_0) \geq 0$. Define $u_\ve(x_0):=u(x_0)+\ve$ and $u_\ve(x) := u(x)$ for all $x \in X\sm \{x_0\}$. Then $u_\ve$ is a sub-solution for any sufficiently small $\ve>0$, by monotony and continuity of the scheme $\gF$, thus $u(x_0) \geq u_\ve(x_0)$ by construction which is a contradiction. Finally we obtain $\gF u=0$ identically on $X$, as announced.
+\end{proof}
+
+\optmedium{Formalize Perron's existence result}
