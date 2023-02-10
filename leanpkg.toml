@@ -1,0 +1,8 @@
+[package]
+name = "fast_marching"
+version = "0.1"
+lean_version = "leanprover-community/lean:3.50.3"
+path = "src"
+
+[dependencies]
+mathlib = {git = "https://github.com/leanprover-community/mathlib", rev = "735b22f8f9ff9792cf4212d7cb051c4c994bc685"}
