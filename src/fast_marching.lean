@@ -3,11 +3,23 @@ import topology.instances.ereal
 noncomputable theory
 open topological_space
 
+/-
+# Formalisation of the fast marching algorithm.
+
+$
+\def\bR{\mathbb{R}}
+\def\bU{\mathbb{U}}
+$
+-/
+
 variables {X : Type*} [finite X]
 
 local notation `U` := X → ereal
 local notation `∞` := (⊤ : ereal)
 
+/- Definition
+We define $u^{< t}(x)$, where $u \in \bU := \bR^X$ ... 
+-/
 def cut_lt (u : U) (t : ereal) : X → ereal :=
 λ x, if u x < t then u x else ∞
 
