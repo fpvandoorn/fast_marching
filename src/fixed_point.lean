@@ -56,6 +56,8 @@ be in the range of the function. There are some tradeoffs to this choice, discus
 (Note : Notation would be more appropriate)
 In all this document, $X$ denotes a non-empty finite set, and $𝕌 := ℝ^X$ is the type of all
 mappings from $X$ to $ℝ$.
+
+(Alternatively, we could try extended reals)
 -/
 variables {X : Type*} [finite X] [nonempty X]
 local notation `𝕌` := X → ℝ
@@ -78,13 +80,11 @@ local infix ` ≺ `:50 := strong_lt
 
 /- Example
 The type $𝕌 = ℝ^X$ also has a an algebra structure over the field $ℝ$.
-In particular, 0:𝕌 and 1:𝕌 (here denoted as 𝕀) are defined, and the constant function equal 
-to $t∈ℝ$ is obtained as t•𝕀.
+In particular, 0:𝕌 and 1:𝕌 are defined.
 -/
 example : ring 𝕌 := by apply_instance
-local notation `𝕀` := (1:𝕌)
-example : 𝕌 := 𝕀
-example : 𝕌 := (0:𝕌)
+example : 𝕌 := 1
+example : 𝕌 := 0
 
 /- Example 
 The order structure on 𝕌 is compatible with the algebra structure 
@@ -101,6 +101,12 @@ example (h:u≤v) (k:0≤t) :  (t•u ≤ t•v) := begin
   intro x, specialize h x,
   simp at *, nlinarith,
 end
+lemma order_embeds (t_pos:t≥(0:ℝ)): (0:𝕌) ≤ t•1 :=
+begin
+  rw pi.le_def at *, intro x, simp,exact t_pos,
+end
+
+
 
 /-
 ## Solutions, sub-solutions, super-solutions.
@@ -160,7 +166,7 @@ example : Prop := monotone Λ
 An operator $Λ$ is said sub-additive if $Λ (u+t) ≤ (Λ u)+t$ for all $u ∈ 𝕌$ 
 and all $t ≥ 0$.   
 -/
-def is_subadditive := ∀ (u:𝕌) (t≥(0:ℝ)), Λ (u+t•𝕀) ≤ (Λ u)+t•𝕀
+def is_subadditive := ∀ (u:𝕌) (t≥(0:ℝ)), Λ (u+t•1) ≤ (Λ u)+t•1
 
 /- Theorem
 The weak comparison principle shows that, for a monotone and sub-additive operator,
@@ -175,17 +181,17 @@ begin
   cases finite.exists_max (u-v) with x hx,
   let t := (u-v) x, 
   have t_eq : t = u x - v x,refl,
-  have t_ge : u≤v+t•𝕀,  
+  have t_ge : u≤v+t•1,  
     rw pi.le_def, simp at *, 
     intro y, linarith [hx y],
 -- We distinguish two cases : either t<0, or t≥0.
   cases (le_or_lt 0 t) with t_pos t_neg,
 -- In the case $t≥0$, we can use sub-additivity and monotony to establish $Λ u ≤ v+t$
-  have h : Λ u ≤ v+t•𝕀,
+  have h : Λ u ≤ v+t•1,
   calc -- Note : strong-less-than not usable here in Lean (no transitivity ?)
-  Λ u ≤ Λ (v+t•𝕀) : by exact Λ_mon t_ge
-  ... ≤ Λ v + t•𝕀 : by exact Λ_sadd v t t_pos
-  ... ≤ v+t•𝕀 : (add_le_add_right v_supsol (t•𝕀)),
+  Λ u ≤ Λ (v+t•1) : by exact Λ_mon t_ge
+  ... ≤ Λ v + t•1 : by exact Λ_sadd v t t_pos
+  ... ≤ v+t•1 : (add_le_add_right v_supsol (t•1)),
 -- Combining with the definition of t, we obtain u x < Λ u x ≤ v x + t = u x, contradiction
   let zz := h x, simp at zz, 
   have contra : u x < u x, -- Note : unclear why linarith does not conclude this alone
@@ -242,7 +248,7 @@ We need a very-large-value vlv, since +∞ is not allowed in our setting.
 The required assumption is that there exists a super-solution to the scheme 
 which is bounded above by vlv.
 -/
-variables (vlv : ℝ) (h_vlv : ∃ u ≤ vlv•𝕀, Λ u ≤ u)
+variables (vlv : ℝ) (h_vlv : ∃ u ≤ vlv•1, Λ u ≤ u)
 
 /- Definition
 We define $u^{< t}(x)$ as $u x$ if $u x < t$ else vlv (the very large value).
@@ -255,7 +261,7 @@ def cut_le (u : 𝕌) (t : ℝ) : 𝕌 := λ x, if u x ≤ t then u x else vlv
 Informally, a scheme is δ-causal iff the arrival times until t+δ (included), only depend 
 on the arrival times until t (excluded).
 -/
-def is_causal_with (Λ : 𝕌 → 𝕌) (δ : ℝ) :=
+def is_causal_with (δ : ℝ) (Λ : 𝕌 → 𝕌) :=
 ∀ (u v : 𝕌) (t : ℝ), cut_lt vlv u t = cut_lt vlv v t →
   cut_le vlv (Λ u) (t + δ) = cut_le vlv (Λ v) (t + δ)
 
