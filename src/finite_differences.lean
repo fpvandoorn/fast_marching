@@ -29,18 +29,19 @@ $$
   𝔽 u(x) := F(x, (u x), (u y - u x)_{y ∈ X})
 $$
 -/
-def eval_scheme := λ x, F x (u x) (λ y, u y-u x)
+def eval_scheme : X → ℝ := λ x, F x (u x) (λ y, u y - u x)
 local notation `𝔽` := eval_scheme F
 
 
 /- Definition
-A finite differences scheme is degenerate elliptic if it is non-decreasing w.r.t. 
-the second variable, and non-decreasing w.r.t. the third 
+A finite differences scheme is degenerate elliptic if it is non-decreasing w.r.t.
+the second variable, and non-decreasing w.r.t. the third
 -/
-def is_degenerate_elliptic := ∀ (x : X) (s t : ℝ) (s≤t) (u v : 𝕌) (u≥v), F x s u ≤ F x t v 
+def is_degenerate_elliptic := ∀ (x : X) (s t : ℝ) (hst : s ≤ t) (u v : 𝕌) (huv : u ≥ v),
+  F x s u ≤ F x t v
 
 /- Definition
-A finite differences scheme is causal if it only depends on the positive part 
+A finite differences scheme is causal if it only depends on the positive part
 of the third argument.
 -/
 def is_causal (F : X → ℝ → (X → ℝ) → ℝ) : Prop :=
@@ -54,8 +55,8 @@ def is_causal (F : X → ℝ → (X → ℝ) → ℝ) : Prop :=
 /- Theorem
 Weak comparison principle
 -/
-theorem strict_subsol_lt_supsol (F_DE : is_degenerate_elliptic F) 
-(u_strict_subsol : 𝔽 u ≺ 0  ) (v_supsol : 0 ≤ 𝔽 v) : u ≺ v :=
+theorem strict_subsol_lt_supsol (F_DE : is_degenerate_elliptic F)
+  (u_strict_subsol : 𝔽 u ≺ 0) (v_supsol : 0 ≤ 𝔽 v) : u ≺ v :=
 begin
   sorry
 end
@@ -65,14 +66,14 @@ Perron solution
 -/
 
 /-
-## The Gauss-Siedel/Jacobi update  
+## The Gauss-Siedel/Jacobi update
 -/
 
 /-
 Relation with the fixed point formalism
 -/
-def is_update := F x t (u-t•𝕀) = 0
-def exists_update := ∃ (t:ℝ), is_update F u x t
-def unique_update := is_update F u x s ∧ is_update F u x t → (s=t)
+def is_update := F x t (u - t • 𝕀) = 0
+def exists_update := ∃ (t : ℝ), is_update F u x t
+def unique_update := is_update F u x s ∧ is_update F u x t → s = t
 
 end finite_difference
