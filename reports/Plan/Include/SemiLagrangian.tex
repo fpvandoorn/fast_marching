@@ -1,0 +1,89 @@
+The objective is to establish basic properties of the construction the monotone and causal operators, to construct the classical schemes of Tsitsiklis \cite{Tsitsiklis:1995EfficientTrajectories}, to establish the "Acuteness implies causality" result of Sethian \cite{Sethian2003OUM}, and to construct a scheme for one class of anisotropic metrics (either Riemannian \cite{Mirebeau:2014MarchingLattice} or Finslerian \cite{Mirebeau:2014EfficientFinsler}).
+
+\subsection{General construction}
+
+
+
+\begin{proposition}[Combining Monotone operators]
+Let $\Lambda_0$, $\Lambda_1$ be Monotone (resp. causal) operators on a (finite) set $X$. 
+	Then $\max\{\Lambda_0,\Lambda_1\}$ and $\min\{\Lambda_0,\Lambda_1\}$ also are.
+\end{proposition}
+
+\task{Prove this proposition (or a generalization, e.g. to finite sums and maxima).}
+
+The basic structure of semi-Lagrangian discretizations of the eikonal equation \cite{Tsitsiklis:1995EfficientTrajectories,Sethian2003OUM,Bornemann:2006FiniteElement,Mirebeau:2014EfficientFinsler,Mirebeau:2014MarchingLattice} is the following.
+Denote 
+\begin{equation}
+	\Xi_d := \{\xi \in [0,\infty[^d\mid\sum_{1 \leq i \leq d} \xi_i = 1\}. 
+\end{equation}
+Given $x\in X \subset \bR^d$, and $V = \{v_1,\cdots,v_d\}$ such that $x+v_i \in X$, we define 
+\begin{equation}
+	\Lambda^F_V u(x) := \inf\{ F(\sum_{1 \leq i \leq d} \xi_i v_i) + \sum_{1 \leq i \leq d} \xi_i u(x+v_i) \mid \xi \in \Xi_d\},
+\end{equation}
+where $F$ is a given function.
+
+
+\task{Prove that this construction is monotone}
+
+The consistency of this construction is discussed below.
+
+\begin{proposition}
+	Let $V_1,\cdots,V_N \in (\bR^d)^d$, be such that for all $v \in \bR^d$ there exists $1 \leq n \leq N$ and $\xi \in [0,\infty[^d$ such that $v = V_n \xi$. 
+Assume also that $F : \bR^d \to [0,\infty]$ is convex and $1$-homogeneous, and define
+\begin{equation}
+	\Lambda^F u(x) := \min_{1 \leq n \leq N} \Lambda^F_{V_n} u(x). 
+\end{equation}
+If $u$ is affine and $\Lambda^F u(x) = u(x)$, then $F^*(\nabla u(x)) = 1$. 
+\end{proposition}
+
+\task{Formalize the proof of this proposition.}
+
+
+
+\subsection{Acuteness implies causality}
+
+The result "Acuteness implies causality" was implicit in \cite{Tsitsiklis:1995EfficientTrajectories} (isotropic case), then made explicit and generalized to Riemannian metrics in \cite{Sethian2003OUM}, extended to Finsler metrics in \cite{Vladimirsky:2008LabelSetting}, ...
+It is at the foundation of semi-Lagrangian fast marching methods.
+
+\task{Formalize the notion of "acuteness of the angle between two vectors w.r.t.\ a metric", see \cite{Mirebeau:2014EfficientFinsler}.
+Prove that it reduce to the usual definition in the special case of an Isotropic or Riemannian metrics.
+}
+
+
+\task{Formalize the proof of "Acuteness implies causality" following \cite[Proposition 1.3]{Mirebeau:2014EfficientFinsler}. (Dimension $d=2$, Finsler metrics)}
+
+\task{Formalize the proof of "Acuteness implies causality" in the Riemannian case, in arbitrary dimension.}
+
+
+\subsection{Acuteness implies causality ($d=3$, Riemannian metrics)}
+
+In dimension $d\in \{2,3\}$, the concept of obtuse superbase allows to construct an acute stencil covering all directions. 
+Another construction was given in \cite{Mirebeau:2014MarchingLattice}, but this one should be simpler.
+
+\begin{proposition}
+	If $v_0,\cdots,v_3$ is a $D$-obtuse superbase of $\bZ^3$, then 
+	\begin{equation}
+		\{(v_i,v_i+v_j,v_i+v_j+v_k)\mid \text{ for all triplets of pairwise distinct } i,j,k\in \{0,1,2,3\}\},
+	\end{equation}
+	defines a $D$-acute stencil covering all directions.
+\end{proposition}
+\todo[inline]{Formalize this proposition}
+
+This is in fact a special case of a general construction, in arbitrary dimension, where one uses the Voronoi vectors to construct similarly an acute stencil.
+
+\opthard{
+Formalize the concept of Voronoi cell, and prove that the boundary of the star of the origin in the Delaunay mesh of $\bZ^d$ w.r.t.\ $\|\cdot\|_D$ defines an acute stencil.
+}
+
+
+\subsection{Acute stencil construction ($d=2$, Finsler metrics)}
+
+In dimension $d=2$, the Stern-Brocot tree allows to construct acute stencils using an iterative refinement method. 
+This tree is also interesting for its various arithmetic properties.
+
+\optmedium{Formalize the refinement procedure defining the FM-ASR \cite{Mirebeau:2014EfficientFinsler}}
+
+\optmedium{Prove the $\cO(\kappa\ln \kappa)$ average bound, where $\kappa$ denotes the anisotropy ratio of the norm.}
+
+
+

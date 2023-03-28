@@ -1,0 +1,110 @@
+
+\subsection{General construction}
+
+
+The objective is to establish basic stabilities for the construction of Eulerian schemes, and to construct the classical numerical scheme for the Isotropic eikonal equation \cite{sethian1996fast}, as well as the scheme from \cite{mirebeau2019riemannian} for the Riemannian eikonal equation (which is the simplest anisotropic case).
+
+
+\begin{proposition}[Combining DDE schemes]
+\label{prop:comb_DDE}
+Let $F$ and $G$ be DDE (resp.\ causal) schemes over a (finite) set $X$. The the following schemes are DDE (resp.\ causal) as well
+\begin{align*}
+	&α F+β G,&
+	&\max \{F,G\},&
+	&\min \{F,G\}, &
+	&η \circ F
+%	&v \mapsto F(η \circ v),
+\end{align*}
+where $α,β ≥ 0$, and $η : \bR \to \bR$ is non-decreasing.
+%De plus $FG$ est DDE si $F$ et $G$ sont toujours positifs. Ces propriétés de stabilité valent aussi pour les opérateurs dégénérés elliptiques, dans le cadre continu.
+\end{proposition}
+
+\task{Prove this proposition (or a generalization, e.g. to finite sums and maxima).}
+
+\begin{lemma}
+Given non-negative coefficients $\alpha : X \times X \times X \to [0,\infty[$, then following scheme is DDE and causal
+\begin{align*}
+	\forall x \in X \sm X_0, Fu(x) &:= \sum_{y,z \in X} 	\alpha(x,y,z) \max \{0,u(x)-u(y),u(x)-u(z)\}_+^2,\\
+	\forall x \in X_0, Fu(x) &:= u(x)-u(x_0).
+\end{align*}
+\end{lemma}
+
+\task{Prove this proposition, using the previous proposition and building the scheme from simpler ones.}
+
+\begin{remark}
+	The assumption that $X$ is finite is used in the proof of the maximum principle, and for convergence analysis purposes.
+	
+	However it may be annoying when defining finite difference schemes, since in that case we want to work on the Cartesian grid $h \bZ^d$.
+	
+	It is probably better to keep the definition general (possibly infinite X), and to assume that $X$ is finite only when needed.
+\end{remark}
+
+
+\subsection{The classical isotropic scheme}
+
+The classical scheme for the isotropic eikonal equation, on the Cartesian grid $h\bZ^d$, reads 
+\begin{equation}
+	Fu(x) := \sum_{1 \leq i \leq d} \max \{0, \frac{u(x)-u(x-h e_i)} h, \frac{u(x)-u(x+h e_i)} h\}^2,
+\end{equation}
+where $(e_i)_{1 \leq i \leq d}$ denotes the canonical basis. 
+
+\task{Prove that it is consistent with the eikonal equation operator $Fu(x) = \|\nabla u(x)\|^2 + \cO(h)$, and that it is DDE and causal.}
+
+
+
+\opteasy{
+Prove that numerical schemes of the general form 
+\cite[Eq (18)]{mirebeau2019hamiltonian} are DDE and causal.
+}
+
+
+
+\subsection{Riemannian metrics, and Selling's algorithm}
+
+Consider the scheme on $h\bZ^d$
+\begin{equation}
+Fu(x) := \sum_{1 \leq i \leq I} \rho_i(x)  \max\{0, \frac{u(x)-u(x-h e_i)} h, \frac{u(x)-u(x+h e_i)} h\}^2 - 1,
+\end{equation}
+where $I$ is an integer, $\rho_i(x) \geq 0$ are weights, $e_i\in \bZ^d \sm \{0\}$ are offsets with integer coordinates. Such schemes are studied in \cite{mirebeau2019riemannian}.
+
+\task{Prove that it is consistent with the Riemannian eikonal equation $\|\nabla u(x)\|^2_{D(x)}-1$, where $D(x):=\sum_{1 \leq i \leq I} \rho_i(x) e_i e_i^\top$. }
+
+\opteasy{
+Prove that numerical schemes of the form \cite[Eq (22)]{mirebeau2019riemannian} are DDE but not causal. 
+}
+
+
+
+In practice, the matrix $D(x)$ is given, and we want to define suitable weights $\rho_i(x)$.
+For that purpose, in dimension $d \in \{2,3\}$, a efficient approach is Selling's decomposition \cite{Selling:1874Algorithm,Conway1992ThreeDimensional}, which is a special case of Voronoi's reduction of quadratic forms \cite{Schurmann2009ComputationalQuadratic}.
+
+
+
+\task{
+Define the concept of superbase of $\bZ^d$, of $D$-obtuse superbase of $\bZ^d$. 
+
+Prove that Selling's algorithm terminates. 
+
+Prove Selling's formula.
+
+Prove that Selling's decomposition yields a suitable matrix decomposition.
+
+See for instance \cite[Appendix B]{bonnans2022randers}.
+}
+
+Selling's decomposition associates to each $D \in S_d^{++}$ a mapping $\rho_D : \bZ^d \sm \{0\} \to [0,\infty[$, finitely supported and such that $\sum_e \rho_D(e) e e^\top = D$. 
+
+In order to study the convergence error of the scheme, one needs to bound the norm of the offsets $e \in \bZ^d$ such that $\rho_D(e) \neq 0$.
+
+\task{
+Use the fact that the energy of superbases (denoted $\cE(b)$ in \cite[Proposition B.3]{bonnans2022randers}) decreases along the iterations to prove a basic estimate of $\|e\|$ in terms of $\sqrt{\|D\| \|D^{-1}\|}$ when $\rho_D(e) \neq 0$.
+}
+
+\optmedium{
+Prove that $\|e\| \leq C \sqrt{\|D\| \|D^{-1}\|}$ when $\rho_D(e) \neq 0$, by using \cite[Proposition 4.8 and Theorem 4.11]{mirebeau2018fast}.
+}
+
+
+\opthard{Prove that Selling's decomposition is unique.}
+
+

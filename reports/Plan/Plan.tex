@@ -49,11 +49,13 @@
 \def\bR{\mathbb{R}}
 \def\bU{\mathbb{U}}
 \def\bZ{\mathbb{Z}}
+\def\cE{\mathcal{E}}
 \def\cO{\mathcal{O}}
 \def\gF{\mathfrak{F}}
 \def\sm{\setminus}
 \def\ve{\varepsilon}
 
+\DeclareMathOperator\Cone{Cone}
 
 %latex_to_unicode=False
 % The script latex_to_unicode.py will not tamper with this part of the document.
@@ -73,7 +75,7 @@ Universit\'e Paris-Saclay, ENS Paris-Saclay, CNRS, Centre Borelli, F-91190 Gif-s
 
 \end{abstract}
 
-\todo[inline]{Work in progress : plan for the internship}
+\todo[inline]{Work in progress : plan for the internship.}
 
 The fast-marching algorithm \cite{sethian1996fast,Tsitsiklis:1995EfficientTrajectories} allows to numerically compute the arrival time of a front in a domain of $\bR^d$, in the presence of obstacles, and where the front speed is dictated locally. It has countless applications, in robotic motion planning, image segmentation, seismic traveltime tomography, etc Since its introduction, it has been extended to the computation of shortest paths on manifolds \cite{Kimmel:1998Manifold,Bronstein2007Weighted}, or in domains equipped with various types of anisotropy \cite{Sethian2003OUM,mirebeau2019riemannian}. 
 
@@ -96,9 +98,13 @@ The report should include a discussion of the various choices and challenges enc
 \label{sec:abstract}
 \input{Include/Abstract.tex}
 
-\section{Discretizations of the eikonal equation}
-\label{sec:discretization}
-\input{Include/Discretization.tex}
+\section{Eulerian discretization of the eikonal equation}
+\label{sec:Eulerian}
+\input{Include/Eulerian.tex}
+
+\section{Semi-Lagrangian discretization}
+\label{sec:SemiLagrangian}
+\input{Include/SemiLagrangian.tex}
 
 \section{Convergence analysis}
 \label{sec:convergence}
