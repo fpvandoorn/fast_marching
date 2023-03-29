@@ -36,9 +36,9 @@ calc
 /- We could work with our own type, reals extended with infinity. -/
 
 open with_top function
-@[derive [has_zero, has_one, nontrivial, comm_monoid_with_zero,
+@[derive [nontrivial, comm_monoid_with_zero,
   has_Sup, has_Inf, add_comm_monoid_with_one, linear_ordered_add_comm_monoid_with_top,
-  densely_ordered, nontrivial, has_sub, mul_zero_class]]
+  densely_ordered, has_sub, mul_zero_class]]
 def real_with_infty := with_top ℝ
 
 notation `ℝ∞` := real_with_infty
