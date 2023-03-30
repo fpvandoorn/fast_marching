@@ -1,13 +1,29 @@
 -- begin header
 
-import topology.instances.real
+import topology.instances.ereal
 import preliminaries
+import data.real.ereal
 noncomputable theory
 open topological_space
 open partial_order
 
 
 -- end header
+
+/-
+This file was an another attempt at using the ereal type.
+
+Pros :
+- Appropriate as an initial condition for the fast marching algorithm.
+- Appropriate for outflow boundary conditions.
+- More generally, appropriate for working with the max-plus semiring, 
+ which underlies some of these works.
+
+Cons :
+- Elementary proofs become painful, because the algebraic structure of (ereal, +, *) is so poor,
+ as opposed to (ereal, max, +). We constantly need to check that quantities are not infty.
+- Tactics such as linarith cannot work in this setting.
+-/
 
 /-
 # Formalisation of the fast marching algorithm.
@@ -61,16 +77,42 @@ mappings from $X$ to $ℝ$.
 
 (Alternatively, we could try extended reals)
 -/
-variables {X : Type*} [nonempty X]
-local notation `𝕌` := X → ℝ
-variables {X} (Λ : 𝕌 → 𝕌) (F : X → ℝ → 𝕌 → ℝ) (u v w : 𝕌) (x : X) (s t : ℝ)
+local notation `ℛ` := ereal 
+example : mul_pos_mono ereal := by apply_instance
+variables {X : Type*} [finite X] [nonempty X]
+local notation `𝕌` := X → ℛ
+variables {X} (Λ : 𝕌 → 𝕌) (F : X → ℛ → 𝕌 → ℛ) (u v w : 𝕌) (x : X) (s t : ℛ)
+
+lemma ereal.finite_add_inverse : ∀ {t : ℛ}, t ≠ ∞ → t ≠ -∞ → 0 = t-t := 
+begin
+  intros t hp hm,
+  let k := ereal.can_lift.prf t,
+  simp at k,
+  cases (k hp hm) with tt htt,
+  let w := ereal.coe_sub tt tt,
+  simp at w,
+  rw htt at w,
+  exact w,
+end
+
+lemma ereal.finite_add_sub : ∀ {s t : ℛ}, t ≠ ∞ → t ≠ -∞  → s=t+(s-t) := 
+begin
+  intros s t hp hm,
+  let k:=ereal.finite_add_inverse hp hm, 
+  calc 
+  s = s+0 : by simp
+  ... = s+(t-t) : by rw k
+  ... = (s+t)-t : add_sub s t t
+  ... = (t+s)-t : by rw [add_comm s t]
+  ... = t+(s-t) : by rw [add_sub t s t],
+end
 
 /- Example
 A real valued function which is defined on a finite and non-empty set, attains its bounds.
 -/
-example [finite X] : ∃ (x : X), ∀ (y : X), u x ≥ u y := finite.exists_max u
+example : ∃ (x : X), ∀ (y : X), u x ≥ u y := finite.exists_max u
 
-/- Example
+/- Example 
 The type $𝕌 = ℝ^X$ as a product space is equipped with the usual partial order and
 topology. Recall that $u≤v$ iff $u x ≤ v x$ for all $x∈X$. We must distinguish
 weak-less-than $u < v$, i.e. $u≤v$ and $u≠v$, from strong-less-than $u≺v$, i.e.
@@ -78,29 +120,70 @@ iff $u x < v x$ for all $x∈X$.
 -/
 example : topological_space 𝕌 := by apply_instance
 example : partial_order 𝕌 := by apply_instance
+example : has_mul 𝕌 := by apply_instance
+example : preorder 𝕌 := by apply_instance
 local infix ` ≺ `:50 := strong_lt
+example : has_smul ℛ 𝕌 := by apply_instance
+
+/-
+Curiously, the pos_mul_mono instance of ereal does not transfer to 𝕌 := X -> ereal
+using the standard instance mechanism.
+-/
+/-
+example : ∀ (a b c : ℛ), b ≤ c → a+b ≤ a+c := 
+begin
+  library_search,
+end 
+-/
+
+lemma mul_le_mul_of_nonneg_left  : ∀ {a b c : 𝕌}, a ≤ b → 0 ≤ c → c * a ≤ c * b := 
+begin
+  intros a b c hab hc x,
+  exact mul_le_mul_of_nonneg_left (hab x) (hc x),
+end
+
+instance 𝕌.to_pos_mul_mono : pos_mul_mono 𝕌 := 
+begin
+  refine {elim := _},
+  intros m n1 n2 h,
+  exact mul_le_mul_of_nonneg_left h m.2,
+end
+
+instance 𝕌.to_mul_pos_mono : mul_pos_mono 𝕌 := 
+begin
+  refine pos_mul_mono_iff_mul_pos_mono.mp _,
+  apply_instance,
+end
+
+example : pos_mul_mono 𝕌 := by apply_instance
 example : mul_pos_mono 𝕌 := by apply_instance
 
 /- Example
 The type $𝕌 = ℝ^X$ also has a an algebra structure over the field $ℝ$.
 In particular, 0:𝕌 and 1:𝕌 are defined.
 -/
-example : ring 𝕌 := by apply_instance
+-- example : ring 𝕌 := by apply_instance -- not a ring with extended reals
 example : 𝕌 := 1
 example : 𝕌 := 0
 
 /- Example
-The order structure on 𝕌 is compatible with the algebra structure
+The order structure on 𝕌 is compatible with the group structure
 -/
+example (h :u ≤ v) : ∀ x, u x ≤ v x := h -- order relation 
 example (h : u ≤ v) : u + w ≤ v + w := add_le_add_right h w
 example (h : u ≤ v) : w + u ≤ w + v := add_le_add_left h w
 
-lemma mul_le_mul (h : u ≤ v) (k : 0 ≤ w) : u * w ≤ v * w :=
-mul_le_mul_of_nonneg_right h k
+example (a b c : ℛ) (hab: a≤b) (hc : 0≤c) : a*c ≤ b*c := mul_le_mul_of_nonneg_right hab hc
 
-example (h : u ≤ v) (k : 0 ≤ t) : t • u ≤ t • v :=
-mul_le_mul_of_nonneg_left h (λ x, k)
 
+example (h : u ≤ v) (k : 0 ≤ t) : t • u ≤ t • v := mul_le_mul_of_nonneg_left h (λ x,k)
+
+example (h : 0 ≤ t) : (0: 𝕌) ≤ (λ x,t) := λ x, h
+example : t • (1:𝕌) = (λ x,t) :=
+begin
+  funext,
+  simp,
+end
 lemma order_embeds (t_pos : t ≥ (0 : ℝ)) : (0 : 𝕌) ≤ t • 1 :=
 begin
   simp at t_pos, simp [pi.le_def, t_pos],
@@ -166,16 +249,24 @@ example : Prop := monotone Λ
 An operator $Λ$ is said sub-additive if $Λ (u+t) ≤ (Λ u)+t$ for all $u ∈ 𝕌$
 and all $t ≥ 0$.
 -/
-def is_subadditive := ∀ (u : 𝕌) (t ≥ (0 : ℝ)), Λ (u + t • 1) ≤ Λ(u) + t • 1
+def is_subadditive := ∀ (u : 𝕌) (t ≥ (0 : ℛ)), Λ (u + t • 1) ≤ Λ(u) + t • 1
 
 /- Theorem
 The weak comparison principle shows that, for a monotone and sub-additive operator,
 strict-subsolutions are bounded by super-solutions.
 
-TODO : since we'll construct a number of 
+-- We need that v is finite, otherwise the result is false.
+(Consider Λ u = u+1, which admits the "supersolution" u = -∞)
+
+-- We can add the finiteness assumption. However, the proof becomes painful, because 
+we cannot use linarith, and all inequalities must be done by hand.
+
+-- Alternatively, we can assume that u and v take real values, and use a coercion. 
+
+-- TODO : finish this.
 -/
-theorem strict_subsol_lt_supsol [finite X] (Λ_mon : monotone Λ) (Λ_sadd : is_subadditive Λ)
-  (u_strict_subsol : u ≺ Λ u) (v_supsol : Λ v ≤ v) : u ≺ v :=
+theorem strict_subsol_lt_supsol (Λ_mon : monotone Λ) (Λ_sadd : is_subadditive Λ)
+  (u_strict_subsol : u ≺ Λ u) (v_supsol : Λ v ≤ v) (finite_v : ∀ x:X, v x≠∞ ∧ v x≠-∞) : u ≺ v :=
 begin
   -- Lean only has few lemmas for strong-less-than, hence we unfold this definition.
   unfold strong_lt at *,
@@ -185,7 +276,12 @@ begin
   have t_eq : t = u x - v x, refl,
   have t_ge : u ≤ v + t • 1,
   rw pi.le_def, simp at *,
-  intro y, linarith [hx y],
+  intro y, specialize hx y, 
+  rw t_eq, 
+  calc 
+  u y = v y + (u y - v y) : ereal.finite_add_sub (finite_v y).1 (finite_v y).2 -- !! needs that v y is finite
+  ... ≤ v y + (u x - v x) : sorry, -- addi
+
   -- We distinguish two cases : either t<0, or t≥0.
   cases le_or_lt 0 t with t_pos t_neg,
   -- In the case $t ≥ 0$, we can use sub-additivity and monotony to establish $Λ u ≤ v+t$
@@ -198,140 +294,25 @@ begin
     specialize h x,
     specialize u_strict_subsol x,
     dsimp at h, simp at h,
-    have contra : u x < u x, linarith,
-    linarith },
+    have contra : u x < u x, 
+    calc 
+    u x < Λ u x : u_strict_subsol
+    ... ≤ v x + t : h
+    ... = v x + (u x - v x): by rw t_eq
+    ... = u x : by rw [←ereal.finite_add_sub (finite_v x).1 (finite_v x).2], -- !! needs that v x is finite
+    let k:= lt_irrefl (u x) contra, tauto,
+    },
   -- The case where $t < 0$ is trivial
   { intro y,
     have hy := hx y,
     simp at hy,
+    -- Also needs that v is finite here
+    sorry,
     linarith }
 end
 
-/- Definition
-An operator $Λ$ has approximable sub-solutions if they are all cluster points 
-of strict sub-solutions.
--/
-def is_subsol_approximable := {u | u ≤ Λ u} ⊂ closure {u | u ≺ Λ u}
-def is_supsol_approximable := {u | Λ u ≤ u} ⊂ closure {u | Λ u ≺ u}
-
-
-/- Theorem
-The strong comparison principle show that, for a monotone and sub-additive operator, 
-with approximable sub-solutions, sub-solutions are bounded by super-solutions.
-
-Note : maybe we should just assume that the specific sub-solution u we are interested in
- is approximable by by strict sub-solutions.
--/
-theorem subsol_approx_lt_supsol [finite X] (Λ_mon : monotone Λ) (Λ_sadd : is_subadditive Λ)
- (Λ_approx : is_subsol_approximable Λ) (u_subsol : u ≤ Λ u) (v_supsol : Λ v ≤ v) : u ≤ v :=
- begin
-  /-
-  Sketch of proof : 
-  {u | u ≤ Λ u} ⊂ closure {u | u ≺ Λ u} ⊂ closure {u | u ≺ v} = {u | u ≤ v}
-  -/
-  sorry
- end
-
 /-
-### The reversed operator
-We want to have the comparison principle for subsolutions and strict super-solutions too, 
-and in the case where super-solutions are approximable.
-
-Rather than re-proving the results, we can consider the operator λ u,- Λ (- u)
--/
-
-/- Definition
-
--/
-def neg_op_neg := λ u, - Λ (-u)
-local notation `Λ_` := neg_op_neg Λ
-
-lemma neg_of_neg_involution : neg_op_neg Λ_ = Λ :=
-begin
-  unfold neg_op_neg, simp,
-end
-
-lemma neg_le {u v : 𝕌} : u ≤ v ↔ -v ≤ -u := 
-begin
-  split; intros h x; specialize h x; simp at *; tauto,
-end
-
-lemma neg_strong_lt {u v : 𝕌} : u ≺ v ↔ -v ≺ -u := 
-begin
-  split; intros h x; specialize h x; simp at *; tauto,
-end 
-
--- lemma neg_eval {u: 𝕌} {x : X} : (- u) x = -(u x) := pi.neg_apply u x
-
-lemma neg_op_neg_monotone (Λ_mon : monotone Λ) : monotone Λ_ := 
-begin
-  unfold monotone neg_op_neg at *,
-  intros u v h,
-  simp [Λ_mon (neg_le.1 h)],
-end
-
-lemma neg_op_neg_subadditive (Λ_sadd : is_subadditive Λ) : is_subadditive Λ_ := 
-begin
-  unfold is_subadditive neg_op_neg at *,
-  intros u t t_pos,simp,
-  let k:= Λ_sadd (- u -(t•1)) t t_pos,  simp at k,
-  have eq: -(t•1) + -u = -u - t•1, funext x, simp, rw [←pi.neg_apply u x], linarith,
-  rw eq, exact k,
-end
-
-lemma neg_op_neg_subsol : u ≤ Λ u → (Λ_ (-u) ≤ -u) :=
-begin
-  unfold neg_op_neg, simp,
-end
-
-lemma neg_op_neg_strict_subsol : u ≺ Λ u → (Λ_ (-u) ≺ -u) :=
-begin
-  unfold neg_op_neg, intros h x, simp [h x],
-end
-
-lemma neg_op_neg_supsol : Λ u ≤ u → (-u ≤ Λ_ (-u)) :=
-begin
-  unfold neg_op_neg, simp,
-end
-
-lemma neg_op_neg_strict_supsol : Λ u ≺ u → (-u ≺ Λ_ (-u)) :=
-begin
-  unfold neg_op_neg, intros h x, simp [h x],
-end
-
-/-
-Subsolutions are bounded by strict super-solutions.
--/
-theorem subsol_lt_strict_supsol [finite X] (Λ_mon : monotone Λ) (Λ_sadd : is_subadditive Λ)
-  (u_subsol : u ≤ Λ u) (v_strict_supsol : Λ v ≺ v) : u ≺ v :=
-begin
-  rw neg_strong_lt,
-  exact strict_subsol_lt_supsol Λ_ (-v) (-u) 
-  (neg_op_neg_monotone Λ Λ_mon) (neg_op_neg_subadditive Λ Λ_sadd)
-  (neg_op_neg_strict_supsol Λ v v_strict_supsol) (neg_op_neg_subsol Λ u u_subsol),
-end
-
-lemma neg_op_neg_subsol_approx : is_subsol_approximable Λ → is_supsol_approximable Λ_ := 
-begin
-  unfold is_subsol_approximable is_supsol_approximable neg_op_neg,
-  intro h,
-  -- We need to make the change of variable u-> -u in the goal ...
-  sorry,
-end
-
-lemma  neg_op_neg_supsol_approx : is_supsol_approximable Λ → is_subsol_approximable Λ_ := sorry
-
-theorem subsol_lt_supsol_approx [finite X] (Λ_mon : monotone Λ) (Λ_sadd : is_subadditive Λ)
- (Λ_approx : is_supsol_approximable Λ) (u_subsol : u ≤ Λ u) (v_supsol : Λ v ≤ v) : u ≤ v :=
-begin
-  rw neg_le,
-  exact subsol_approx_lt_supsol Λ_ (-v) (-u)
-  (neg_op_neg_monotone Λ Λ_mon) (neg_op_neg_subadditive Λ Λ_sadd)
-  (neg_op_neg_supsol_approx Λ Λ_approx)
-  (neg_op_neg_supsol Λ v v_supsol) (neg_op_neg_subsol Λ u u_subsol),
-end
-/-
-## Global iteration
+### Global iteration
 -/
 noncomputable def global_iter: ℕ → 𝕌
 | 0 := u
@@ -363,29 +344,22 @@ We can obtain a solution as a limit of a sequence of sub-solutions, or super-sol
 -- (u_subsol : u ≤ Λ u) (v_supsol : Λ v ≤ v) (u ≤ v)
 
 /-
-## Fast marching
+### Fast marching
 -/
-
-/- Definition
-We need a very-large-value vlv, since +∞ is not allowed in our setting.
-The required assumption is that there exists a super-solution to the scheme
-which is bounded above by vlv.
--/
-variables (vlv : ℝ) (h_vlv : ∃ u ≤ vlv • 1, Λ u ≤ u)
 
 /- Definition
 We define $u^{< t}(x)$ as $u x$ if $u x < t$ else vlv (the very large value).
 We define similarly $u^{\leq t} (x)$.
 -/
-def cut_lt (u : 𝕌) (t : ℝ) : 𝕌 := λ x, if u x < t then u x else vlv
-def cut_le (u : 𝕌) (t : ℝ) : 𝕌 := λ x, if u x ≤ t then u x else vlv
+def cut_lt (u : 𝕌) (t : ℝ) : 𝕌 := λ x, if u x < t then u x else ⊤
+def cut_le (u : 𝕌) (t : ℝ) : 𝕌 := λ x, if u x ≤ t then u x else ⊤
 
 /- Definition
 Informally, a scheme is δ-causal iff the arrival times until t+δ (included), only depend
 on the arrival times until t (excluded).
 -/
 def is_causal_with (δ : ℝ) (Λ : 𝕌 → 𝕌) :=
-∀ (u v : 𝕌) (t : ℝ), cut_lt vlv u t = cut_lt vlv v t →
-  cut_le vlv (Λ u) (t + δ) = cut_le vlv (Λ v) (t + δ)
+∀ (u v : 𝕌) (t : ℝ), cut_lt u t = cut_lt v t →
+  cut_le (Λ u) (t + δ) = cut_le (Λ v) (t + δ)
 
 end fixed_point

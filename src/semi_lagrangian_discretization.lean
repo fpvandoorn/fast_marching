@@ -23,18 +23,27 @@ variables {X} (Λ Λ0 Λ1 : 𝕌 → 𝕌) (u v w : 𝕌) (x : X) (s t : ℝ)
 variables (vlv : ℝ) (h_vlv : ∃ u ≤ vlv•1, Λ u ≤ u)
 local infix ` ≺ `:50 := strong_lt
 
-/- Maybe using metaclasses, or some inheritance mechanism, would be better ? -/
+/- Maybe using instances or metaclasses for the properties monotone, subadditive, causal, 
+or some inheritance mechanism, would be better ? -/
 namespace piecewise
-/--/
+/-
+We consider here an operator defined piecewise on the set X.
+It is common to have different expressions of the scheme on 
+the interior of a domain, and on the boundary (discretized).
+-/
+def mk : ℝ := if (Γ x) then Λ0 u x else Λ1 u x
+example : 𝕌 → 𝕌 := mk Γ Λ0 Λ1 
+
+
+/- Alternative definition. Not as convenient ? 
 def switch : bool → ℝ 
 | tt := Λ0 u x
 | ff := Λ1 u x
 def mk : ℝ := switch Λ0 Λ1 u x (Γ x) 
 -/
-def mk : ℝ := if (Γ x) then Λ0 u x else Λ1 u x
-example : 𝕌 → 𝕌 := mk Γ Λ0 Λ1 
 
-lemma monotone_of_piecewise 
+
+lemma to_monotone
 (h0 : monotone Λ0) (h1 : monotone Λ1) (h : Λ = mk Γ Λ0 Λ1)
 : monotone Λ := 
 begin
@@ -48,7 +57,7 @@ begin
   cases Γ x; simp at hu hv; linarith,
 end
 
-lemma subadditive_of_piecewise 
+lemma to_subadditive
 (h0: is_subadditive Λ0) (h1: is_subadditive Λ1) (h : Λ = mk Γ Λ0 Λ1) 
 : is_subadditive Λ :=
 begin
@@ -64,7 +73,7 @@ end
 /- Lemma
 A scheme defined piecewise from causal schemes is causal.
 -/
-lemma causal_of_piecewise (δ : ℝ) 
+lemma to_causal (δ : ℝ) 
 (h0 : is_causal_with vlv δ Λ0 ) (h1 : is_causal_with vlv δ Λ1) (h : Λ = mk Γ Λ0 Λ1) 
 : (is_causal_with vlv δ Λ):=
 begin
@@ -77,7 +86,7 @@ begin
   unfold cut_le at *,
   simp_rw [h u x, h v x],
 /- Comment
---  TODO : find why I cannot use one of the following lines (have is silly here)
+--  TODO : find why I cannot use one of the following lines ("have" is silly here)
 -- cases Γ x, -- todo : why does not this work ? 
 -- cases bool.dichotomy (Γ x) with hx hx, -- todo : why does not this work ? 
 --  let hx := bool.dichotomy (Γ x), -- todo : why does not this work ? 
@@ -90,21 +99,25 @@ end piecewise
 
 
 namespace boundary_condition
-
+/-
+We consider an operator defined as a constant value u0. 
+This is common to impose Dirichlet boundary conditions u=u0 
+on a suitable part of the domain. 
+-/
 def mk (u0 u : 𝕌) := u0
 
-lemma monotone_of_boundary_condition (u0 : 𝕌) : monotone (mk u0) := 
+lemma to_monotone (u0 : 𝕌) : monotone (mk u0) := 
 begin
   unfold monotone mk, intros, exact partial_order.le_refl u0,
 end
 
-lemma subadditive_of_boundary_condition (u0 : 𝕌) : is_subadditive (mk u0) := 
+lemma to_subadditive (u0 : 𝕌) : is_subadditive (mk u0) := 
 begin
   unfold is_subadditive mk, intros u t t_pos, 
   exact le_add_of_nonneg_right (order_embeds t t_pos),
 end
 
-lemma causal_of_boundary_condition (u0 : 𝕌) (δ : ℝ) : is_causal_with vlv δ  (mk u0) := 
+lemma to_causal (u0 : 𝕌) (δ : ℝ) : is_causal_with vlv δ  (mk u0) := 
 begin
   simp_rw [is_causal_with,cut_le,function.funext_iff,mk], intros _ _ _ h x, 
   refl,
@@ -112,10 +125,36 @@ end
 
 end boundary_condition
 
-namespace graph_setting 
+namespace graph_operator
 
-variable c : X → X → ℝ
-def mk (u:𝕌) (x:X):= infi (λ y, c x y + u y) -- works, but could be a pain to use ?
+variables [finite X] (c : X → X → ℝ)
+
+/-
+The following definition is not very good because ℝ is not a complete lattice.
+We should rather use the fact that $X$ is non-empty and finite.
+-/
+def mk (u:𝕌) (x:X):= infi (λ y, c x y + u y) 
+--#check finset.inf' X 
+--def mk2 (u:𝕌) (x:X) := finset.inf' X (λ y, c x y + u y)
+
+--example : complete_lattice 𝕌 := by apply_instance
+
+lemma test (u v : 𝕌) (h : u≤v) : infi u ≤ infi v := 
+begin
+have hh : ∀ x, u x ≤ v x := pi.le_def.mp h,
+  sorry,
+--  apply infi_mono,
+-- let k:=infi_mono hh,
+--  library_search,
+end
+
+lemma to_monotone : monotone (mk c) := 
+begin
+  unfold monotone, intros u v h x, unfold mk,
+  have h : ∀ y, c x y + u y ≤ c x y + v y, intro y, specialize h y, exact add_le_add_left h (c x y),
+  sorry,
+--  apply infi_mono,
+end
 
 /- Comment
 def mk (c: X → X → ℝ) (u:𝕌) (x:X) : ℝ := 
