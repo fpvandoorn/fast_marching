@@ -84,7 +84,8 @@ example (x : ℝ∞) (hx : x ≠ 0) : x * ∞ = ∞ := mul_top hx
 example : ∞ * (((-1 : ℝ) : ℝ∞) + 1) ≠ ∞ * ((-1 : ℝ) : ℝ∞) + ∞ * 1 :=
 begin
   norm_num,
-  sorry -- to fix -- push_cast,
+  norm_cast,
+  norm_num,
 end
 
 /- Note: we need to do some work if we want to prove lemmas about suprema and infima in this type.
