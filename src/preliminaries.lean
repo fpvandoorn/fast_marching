@@ -4,7 +4,7 @@ noncomputable theory
 open topological_space
 open partial_order
 
--- end header
+-- end 
 
 /- Some basic things that might be missing in mathlib -/
 
