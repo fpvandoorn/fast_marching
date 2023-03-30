@@ -9,6 +9,9 @@ DISTANCES ON CARTESIAN GRIDS
 It is likely useful to adapt the statements a little bit, to be a bit more flexible about the
 type in which we consider these operations, so that the coefficients in `D` and `v` live in the same
 type (`ℝ`) for most of the argument. We can still construct a superbase in `ℤ` at the end.
+
+example
+
 -/
 variables {d : ℕ} {R : Type*} [linear_ordered_comm_ring R]
 
