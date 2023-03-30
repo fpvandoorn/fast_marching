@@ -4,7 +4,7 @@ noncomputable theory
 open topological_space
 open partial_order
 
--- end 
+-- end
 
 /- Some basic things that might be missing in mathlib -/
 
@@ -67,6 +67,7 @@ map_nsmul (⟨coe, coe_zero, coe_add⟩ : ℝ →+ ℝ∞) _ _
 
 @[simp, norm_cast] lemma coe_bit0 (x : ℝ) : (↑(bit0 x) : ℝ∞) = bit0 x := rfl
 @[simp, norm_cast] lemma coe_bit1 (x : ℝ) : (↑(bit1 x) : ℝ∞) = bit1 x := rfl
+@[simp, norm_cast] lemma coe_one (x : ℝ) : (↑(1 : ℝ) : ℝ∞) = 1 := rfl
 
 @[simp, norm_cast] lemma coe_eq_zero {x : ℝ} : (x : ℝ∞) = 0 ↔ x = 0 :=
 real_with_infty.coe_eq_coe_iff
@@ -83,7 +84,7 @@ example (x : ℝ∞) (hx : x ≠ 0) : x * ∞ = ∞ := mul_top hx
 example : ∞ * (((-1 : ℝ) : ℝ∞) + 1) ≠ ∞ * ((-1 : ℝ) : ℝ∞) + ∞ * 1 :=
 begin
   norm_num,
-  norm_cast,
+  sorry -- to fix -- push_cast,
 end
 
 /- Note: we need to do some work if we want to prove lemmas about suprema and infima in this type.

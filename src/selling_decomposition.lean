@@ -27,6 +27,12 @@ if i = j then (1 : E) else (0 : E)
 def is_superbase (v : matrix (fin (d+1)) (fin d) R) : Prop :=
 ∑ i, v i = 0 ∧ |(v.submatrix fin.succ id).det| = 1
 
+/- Example 1: show that `((-1,-1), (1, 0), (0, 1))` is a superbase. -/
+example : is_superbase !![(-1 : ℤ), -1; 1, 0; 0, 1] := sorry
+
+/- Lemma: if `(e₀, e₁, e₂)` is a superbase, then so is `(- e₀, e₁, e₀ - e₁)`. -/
+
+-- example : ...
 
 /-- def B.1 -/
 def is_obtuse (v : matrix (fin (d+1)) (fin d) R) (D : matrix (fin d) (fin d) R) : Prop :=
