@@ -1,8 +1,10 @@
 -- begin header
 import topology.instances.ereal
+import algebra.big_operators.fin
+import tactic
 noncomputable theory
-open topological_space
-open partial_order
+open topological_space partial_order finset matrix
+open_locale big_operators
 
 -- end
 
@@ -31,6 +33,13 @@ calc
   ... ≺ c : hbc
   ... ≺ d : hcd
   ... ≤ e : hde
+
+/- A useful lemma about vector sums -/
+
+@[simp]
+lemma sum_vec_cons {n α} [add_comm_monoid α] (x : α) (f : fin n → α) :
+  ∑ i, vec_cons x f i = x + ∑ i, f i :=
+fin.sum_cons x f
 
 
 /- We could work with our own type, reals extended with infinity. -/
