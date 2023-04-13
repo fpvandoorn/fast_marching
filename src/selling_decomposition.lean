@@ -9,7 +9,7 @@ DISTANCES ON CARTESIAN GRIDS
 It is likely useful to adapt the statements a little bit, to be a bit more flexible about the
 type in which we consider these operations, so that the coefficients in `D` and `v` live in the same
 type (`ℝ`) for most of the argument. We can still construct a superbase in `ℤ` at the end.
-
+leanproject get mathematics_in_lean
 example
 
 -/
@@ -27,12 +27,38 @@ if i = j then (1 : E) else (0 : E)
 def is_superbase (v : matrix (fin (d+1)) (fin d) R) : Prop :=
 ∑ i, v i = 0 ∧ |(v.submatrix fin.succ id).det| = 1
 
+-- begin scratchpad
+example (v : matrix (fin (d+1)) (fin d) R) : ∑ i, (fun j, v j i) = 0 :=
+begin
+  sorry
+end
+
+def is_integer (r : ℝ) := ∃ n : ℤ, r = n
+
+example (n m : ℕ) : 10^5 + 10^5 = 2 * 10^5 :=
+begin
+  norm_num,
+end
+-- end scratchpad
+
 /- Example 1: show that `((-1,-1), (1, 0), (0, 1))` is a superbase. -/
-example : is_superbase !![(-1 : ℤ), -1; 1, 0; 0, 1] := sorry
+example : is_superbase !![(-1 : ℤ), -1; 1, 0; 0, 1] :=
+begin
+  simp only [is_superbase],
+  split,
+  { ext,
+    fin_cases x, refl, refl, },
+  refl,
+
+end
 
 /- Lemma: if `(e₀, e₁, e₂)` is a superbase, then so is `(- e₀, e₁, e₀ - e₁)`. -/
 
--- example : ...
+lemma exercise (e : matrix (fin 3) (fin 2) R) (he : is_superbase e) :
+  is_superbase ![- e 0, e 1, e 0 - e 1] :=
+begin
+  sorry
+end
 
 /-- def B.1 -/
 def is_obtuse (v : matrix (fin (d+1)) (fin d) R) (D : matrix (fin d) (fin d) R) : Prop :=
