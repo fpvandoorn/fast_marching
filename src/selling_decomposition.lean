@@ -58,8 +58,71 @@ end
 lemma exercise (e : matrix (fin 3) (fin 2) R) (he : is_superbase e) :
   is_superbase ![- e 0, e 1, e 0 - e 1] :=
 begin
-  sorry
+  simp only [is_superbase],
+  split,
+  {simp},
+  have h: e 0 - e 1 = -2 * e 1 - e 2,
+  {begin
+    sorry
+  end},
+  /-
+  rw h,
+  rw ← he.2,
+  by_cases j : (e.submatrix fin.succ id).det > 0,
+  {
+  by_cases p : (submatrix ![-e 0, e 1, (-2) * e 1 - e 2] fin.succ id).det > 0,
+  have k : (submatrix ![-e 0, e 1, (-2) * e 1 - e 2] fin.succ id).det = (e.submatrix fin.succ id).det ∨ (submatrix ![-e 0, e 1, (-2) * e 1 - e 2] fin.succ id).det = -(e.submatrix fin.succ id).det,
+  {
+    left,
+    have k1 : (submatrix ![-e 0, e 1, (-2) * e 1 - e 2] fin.succ id).det = (submatrix ![-e 0, e 1, (-2) * e 1 ] fin.succ id).det + (submatrix ![-e 0, e 1, - e 2] fin.succ id).det,
+    {by rw basis.det,}
+  }
+  
+  }
+-/
+rw det_fin_two,
+rw h,
+simp,
+unfold is_superbase at he,
+rw det_fin_two at he,
+simp at he,
+rw ← he.2,
+ring_nf,
+rw abs_eq_abs,
+right,
+ring,
+
+
+
+
 end
+#check @function.funext_iff
+lemma exercise_part_one (e : matrix (fin 3) (fin 2) R) (he : is_superbase e) :
+  e 0 = - e 1 - e 2 :=
+
+  begin
+    have h:=he.1,
+    simp at h,
+    have h2 : univ.sum e = e 0 + e 1 + e 2,
+    {rw fin.sum_univ_def,simp[sum_range_succ],
+    have m: list.fin_range 3 = [0,1,2],
+    refl,rw m,simp,rw add_assoc,},
+    rw h2 at h,
+    rw [← sub_zero (e 2), ← h],
+    ring,
+    rw function.funext_iff at h,
+    simp at h,
+    ext,
+    have := h x,
+    simp, 
+    linarith,
+
+
+
+
+    
+
+  end
 
 /-- def B.1 -/
 def is_obtuse (v : matrix (fin (d+1)) (fin d) R) (D : matrix (fin d) (fin d) R) : Prop :=
