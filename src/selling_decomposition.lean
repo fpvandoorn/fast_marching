@@ -96,6 +96,7 @@ section real
 variables {v : matrix (fin (d+1)) (fin d) ℝ} {D : matrix (fin d) (fin d) ℝ}
 
 local notation `e` := associated_vectors v
+local notation `Z` := set.range (coe : ℤ → ℝ)
 
 /-- The Selling algorithm, position B.3.
 
@@ -103,7 +104,7 @@ Note that the current statement doesn't encode the precise algorithm used. To do
 should just define a sequence of matrices (separately for `d = 2` and `d = 3`)
 and show that we reach one that satisfies the obtuseness.
 -/
-theorem selling_algorithm {Z : add_subgroup ℝ} (vsb : is_superbase v) (vint : ∀ i j, v i j ∈ Z)
+theorem selling_algorithm (vsb : is_superbase v) (vint : ∀ i j, v i j ∈ Z)
   (Dsymm : D.is_symm) (Dposdef : D.pos_def) (hd : d = 2 ∨ d = 3) :
   ∃ v' : matrix (fin (d+1)) (fin d) ℝ,
     is_superbase v' ∧ is_obtuse v' D ∧ ∀ i j, v' i j ∈ Z :=
