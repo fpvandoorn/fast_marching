@@ -38,20 +38,15 @@ abs_max_le_max_abs_abs
 number is the same as its absolute value (either use `library_search` or the mathlib documentation
 search function. -/
 lemma norm_max_le_max_norm_norm : ‖ max x y ‖ ≤ max (‖x‖) (‖y‖) :=
-by { simp_rw [real.norm_eq_abs], exact abs_max_le_max_abs_abs }
+begin
+  sorry
+end
 
 /- Prove the following lemma. This requires some basic topology, in addition to the mentioned
 lemmas. -/
 lemma is_o.max (hu : u =o[𝓝 x] f) (hv : v =o[𝓝 x] f) : (λ x, max (u x) (v x)) =o[𝓝 x] f :=
 begin
-  simp_rw [is_o_iff, eventually_nhds_iff] at hu hv ⊢,
-  intros c hc,
-  rcases hu hc with ⟨t, ht, h2t, hxt⟩,
-  rcases hv hc with ⟨s, hs, h2s, hxs⟩,
-  refine ⟨t ∩ s, λ x hx, _, h2t.inter h2s, ⟨hxt, hxs⟩⟩,
-  refine norm_max_le_max_norm_norm.trans _,
-  rw [max_le_iff],
-  exact ⟨ht x hx.1, hs x hx.2⟩,
+  sorry
 end
 
 /- Harder: prove the following result. It might be useful to first take a look at the following
