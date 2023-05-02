@@ -48,7 +48,7 @@ by norm_fin
 
 variables {α : Type*} [add_comm_monoid α]
 example (f : fin 3 → α) : ∑ i, f i = f 0 + f 1 + f 2 :=
-by { norm_num1, simp_rw [add_zero, ← add_assoc] }
+by { norm_num, simp_rw [← add_assoc] }
 
 /- We could work with our own type, reals extended with infinity. -/
 
