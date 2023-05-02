@@ -1,7 +1,9 @@
 -- begin header
 import topology.instances.ereal
+import algebra.big_operators.norm_num
 import algebra.big_operators.fin
 import tactic
+import tactic.norm_fin
 noncomputable theory
 open topological_space partial_order finset matrix
 open_locale big_operators
@@ -41,6 +43,12 @@ lemma sum_vec_cons {n α} [add_comm_monoid α] (x : α) (f : fin n → α) :
   ∑ i, vec_cons x f i = x + ∑ i, f i :=
 fin.sum_cons x f
 
+example : (2 : fin 3).succ = 3 :=
+by norm_fin
+
+variables {α : Type*} [add_comm_monoid α]
+example (f : fin 3 → α) : ∑ i, f i = f 0 + f 1 + f 2 :=
+by { norm_num1, simp_rw [add_zero, ← add_assoc] }
 
 /- We could work with our own type, reals extended with infinity. -/
 
