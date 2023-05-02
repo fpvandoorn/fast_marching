@@ -4,6 +4,7 @@ import algebra.big_operators.norm_num
 import algebra.big_operators.fin
 import tactic
 import tactic.norm_fin
+import analysis.calculus.fderiv
 noncomputable theory
 open topological_space partial_order finset matrix
 open_locale big_operators
@@ -47,8 +48,17 @@ example : (2 : fin 3).succ = 3 :=
 by norm_fin
 
 variables {α : Type*} [add_comm_monoid α]
-example (f : fin 3 → α) : ∑ i, f i = f 0 + f 1 + f 2 :=
+lemma sum_fin_three (f : fin 3 → α) : ∑ i, f i = f 0 + f 1 + f 2 :=
 by { norm_num, simp_rw [← add_assoc] }
+
+def third_element_aux (i j : fin 3) (h : i ≠ j) : {x : fin 3 | x ≠ i ∧ x ≠ j} :=
+by { apply fintype.choose_x, revert i j, dsimp [exists_unique], dec_trivial }
+
+def third_element (i j : fin 3) (h : i ≠ j) : fin 3 := third_element_aux i j h
+lemma third_element_ne_left (i j : fin 3) (h : i ≠ j) : third_element i j h ≠ i :=
+(third_element_aux i j h).prop.1
+lemma third_element_ne_right (i j : fin 3) (h : i ≠ j) : third_element i j h ≠ j :=
+(third_element_aux i j h).prop.2
 
 /- We could work with our own type, reals extended with infinity. -/
 
