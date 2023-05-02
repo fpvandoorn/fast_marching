@@ -60,6 +60,8 @@ lemma third_element_ne_left (i j : fin 3) (h : i ≠ j) : third_element i j h �
 lemma third_element_ne_right (i j : fin 3) (h : i ≠ j) : third_element i j h ≠ j :=
 (third_element_aux i j h).prop.2
 
+example : third_element 0 1 (by norm_num) = 2 := rfl
+
 /- We could work with our own type, reals extended with infinity. -/
 
 open with_top function
