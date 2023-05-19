@@ -46,7 +46,31 @@ end
 lemmas. -/
 lemma is_o.max (hu : u =o[𝓝 x] f) (hv : v =o[𝓝 x] f) : (λ x, max (u x) (v x)) =o[𝓝 x] f :=
 begin
-  sorry
+  rw is_o_iff at hu hv ⊢ ,
+  intros y hy,
+  rw eventually_nhds_iff,
+  specialize hu hy,
+  specialize hv hy,
+  rw eventually_nhds_iff at hu hv,
+  cases hu with tu pu,
+  cases hv with tv pv,
+  use tu∩tv,
+  cases pv with dv jv,
+  cases pu with du ju, 
+  cases ju with opu inu,
+  cases jv with opv inv, 
+  split,
+  intros x hx,
+  specialize du x hx.1,
+  specialize dv x hx.2,
+  transitivity ,
+  apply norm_max_le_max_norm_norm,
+  apply max_le du dv,
+  split,
+  apply is_open.inter opu opv,
+  split,
+  apply inu,
+  apply inv,
 end
 
 /- Harder: prove the following result. It might be useful to first take a look at the following
