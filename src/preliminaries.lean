@@ -51,16 +51,21 @@ variables {α : Type*} [add_comm_monoid α]
 lemma sum_fin_three (f : fin 3 → α) : ∑ i, f i = f 0 + f 1 + f 2 :=
 by { norm_num, simp_rw [← add_assoc] }
 
-def third_element_aux (i j : fin 3) (h : i ≠ j) : {x : fin 3 | x ≠ i ∧ x ≠ j} :=
+@[simp] def third_element_aux (i j : fin 3) (h : i ≠ j) : {x : fin 3 | x ≠ i ∧ x ≠ j} :=
 by { apply fintype.choose_x, revert i j, dsimp [exists_unique], dec_trivial }
 
-def third_element (i j : fin 3) (h : i ≠ j) : fin 3 := third_element_aux i j h
+@[simp] def third_element (i j : fin 3) (h : i ≠ j) : fin 3 := third_element_aux i j h
 lemma third_element_ne_left (i j : fin 3) (h : i ≠ j) : third_element i j h ≠ i :=
 (third_element_aux i j h).prop.1
 lemma third_element_ne_right (i j : fin 3) (h : i ≠ j) : third_element i j h ≠ j :=
 (third_element_aux i j h).prop.2
 
-example : third_element 0 1 (by norm_num) = 2 := rfl
+@[simp] lemma third_element_0_1 : third_element 0 1 (by norm_num) = 2 := rfl
+@[simp] lemma third_element_0_2 : third_element 0 2 (by norm_num) = 1 := rfl
+@[simp] lemma third_element_1_2 : third_element 1 2 (by norm_num) = 0 := rfl
+@[simp] lemma third_element_1_0 : third_element 1 0 (by norm_num) = 2 := rfl
+@[simp] lemma third_element_2_0 : third_element 2 0 (by norm_num) = 1 := rfl
+@[simp] lemma third_element_2_1 : third_element 2 1 (by norm_num) = 0 := rfl
 
 /- We could work with our own type, reals extended with infinity. -/
 
