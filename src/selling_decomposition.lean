@@ -66,21 +66,6 @@ begin
   {begin
     sorry
   end},
-  /-
-  rw h,
-  rw ← he.2,
-  by_cases j : (e.submatrix fin.succ id).det > 0,
-  {
-  by_cases p : (submatrix ![-e 0, e 1, (-2) * e 1 - e 2] fin.succ id).det > 0,
-  have k : (submatrix ![-e 0, e 1, (-2) * e 1 - e 2] fin.succ id).det = (e.submatrix fin.succ id).det ∨ (submatrix ![-e 0, e 1, (-2) * e 1 - e 2] fin.succ id).det = -(e.submatrix fin.succ id).det,
-  {
-    left,
-    have k1 : (submatrix ![-e 0, e 1, (-2) * e 1 - e 2] fin.succ id).det = (submatrix ![-e 0, e 1, (-2) * e 1 ] fin.succ id).det + (submatrix ![-e 0, e 1, - e 2] fin.succ id).det,
-    {by rw basis.det,}
-  }
-  
-  }
--/
 rw det_fin_two,
 rw h,
 simp,
@@ -92,12 +77,11 @@ ring_nf,
 rw abs_eq_abs,
 right,
 ring,
-
-
-
-
 end
+
+
 #check @function.funext_iff
+
 lemma exercise_part_one (e : matrix (fin 3) (fin 2) R) (he : is_superbase e) :
   e 0 = - e 1 - e 2 :=
 
@@ -117,12 +101,6 @@ lemma exercise_part_one (e : matrix (fin 3) (fin 2) R) (he : is_superbase e) :
     have := h x,
     simp, 
     linarith,
-
-
-
-
-    
-
   end
 
 lemma exercise_lemma (e : matrix (fin 4) (fin 3) R) (he : is_superbase e) :
@@ -133,7 +111,12 @@ lemma exercise_lemma (e : matrix (fin 4) (fin 3) R) (he : is_superbase e) :
     refl, rw m,simp,
   end
 
-
+lemma fin_two_simp :
+  fin.succ (2 : fin 3) = 3 :=
+  begin
+    refl,
+  end
+#check fin_two_simp
 lemma exercise_bis (e : matrix (fin 4) (fin 3) R) (he : is_superbase e) :
   is_superbase ![- e 0, e 1, e 2 + e 0, e 3 + e 0] :=
 
@@ -163,9 +146,16 @@ lemma exercise_bis (e : matrix (fin 4) (fin 3) R) (he : is_superbase e) :
     simp at he,
     have h:=he.2,
     rw ← he.2,
+    rw fin_two_simp,
+    
     --rw e 2.succ 0 at h,
     --rw [nat.succ 2, nat.succ 1, nat.succ 0],
     rw abs_eq_abs,
+    rw g,
+    right,
+    simp,
+    simp [add_mul,mul_add,sub_mul,mul_sub],
+    linarith,
 
 
 
@@ -181,7 +171,7 @@ def is_obtuse (v : matrix (fin (d+1)) (fin d) R) (D : matrix (fin d) (fin d) R) 
 section Z_or_R
 /-! In this section we work in any linear ordered ring, so we can use it for both `ℤ` and `ℝ`. -/
 
-variables {v : matrix (fin (d+1)) (fin d) R} {D : matrix (fin d) (fin d) R}
+
 
 example {D : matrix (fin d) (fin d) ℝ} (Dposdef : D.pos_def) : 0 < D.det := Dposdef.det_pos
 
@@ -190,8 +180,8 @@ example {D : matrix (fin d) (fin d) ℝ} (Dposdef : D.pos_def) : 0 < D.det := Dp
 def norm_D (v : matrix (fin d) unit R) (D : matrix (fin d) (fin d) R) := (transpose (v)).mul(D.mul v)
 
 
-variables {A : matrix (fin d) (fin d) R} {B : matrix (fin d) (fin d) R}
-#check(A.mul B)
+variables {A : matrix (fin d) (fin d) R} {B : matrix (fin d) (fin d) R}{C : fin d → R}
+#check(vec_mul_mul_vec C A)
 
 
 def E_D (v : matrix (fin (d+1)) (fin d) R) (D : matrix (fin d) (fin d) R) := ∑ i , norm_D (matrix.col (v i)) (D)
@@ -223,10 +213,10 @@ lemma E_D_superbase (v : matrix (fin 3) (fin 2) R) (D : matrix (fin 2) (fin 2) R
     have h2 : univ.sum v = v 0 + v 1 + v 2,
     {rw fin.sum_univ_def,simp[sum_range_succ],
     have m: list.fin_range 3 = [0,1,2],
-    refl,rw m,simp,rw add_assoc,},
+    refl,rw m,simp only [list.sum_cons, add_zero, list.sum_nil, list.map.equations._eqn_2, list.map_nil],rw add_assoc,},
     rw fin.sum_univ_def,
     rw fin.sum_univ_def,
-    simp[sum_range_succ],
+    simp only [neg_sub, sub_neg_eq_add, transpose_col, mul_eq_mul],
     have m: list.fin_range 3 = [0,1,2],
     refl,
     rw m,
@@ -244,23 +234,96 @@ lemma E_D_superbase (v : matrix (fin 3) (fin 2) R) (D : matrix (fin 2) (fin 2) R
     {repeat {apply mul_add_col,},}
 
 
-    
+  end 
 
+/-- second try with vectors-/
+
+lemma exercise_part_one_var (e : matrix (fin 3) (fin 2) R) (he : is_superbase e) :
+  e 2 = - e 0 - e 1 :=
+
+  begin
+    have h:=he.1,
+    simp at h,
+    have h2 : univ.sum e = e 0 + e 1 + e 2,
+    {rw fin.sum_univ_def,simp[sum_range_succ],
+    have m: list.fin_range 3 = [0,1,2],
+    refl,rw m,simp,rw add_assoc,},
+    rw h2 at h,
+    rw [← sub_zero (e 2), ← h],
+    ring,
+  end
+
+def norm_D_vec (v : fin d → R) (D : matrix (fin d) (fin d) R) := v ⬝ᵥ mul_vec D v
+def E_D_vec (v : matrix (fin (d+1)) (fin d) R) (D : matrix (fin d) (fin d) R) := ∑ i , norm_D_vec (v i) (D)
+
+lemma E_D_superbase_vec (v : matrix (fin 3) (fin 2) R) (D : matrix (fin 2) (fin 2) R) (he : is_superbase v) (hd : D.is_symm):
+  E_D_vec (![- v 0, v 1, v 0 - v 1]) (D) = E_D_vec(v) (D) - 4 * v 0 ⬝ᵥ mul_vec D (v 1 ):=
+  begin
+    unfold E_D_vec,
+    rw sum_fin_three,
+    rw sum_fin_three,
+    simp only [matrix.head_cons,
+ list.sum_cons,
+ add_zero,
+ list.sum_nil,
+ matrix.cons_vec_bit0_eq_alt0,
+ list.map.equations._eqn_2,
+ matrix.empty_vec_alt0,
+ matrix.vec2_dot_product,
+ list.map_nil,
+ matrix.empty_vec_append,
+ matrix.cons_val_one,
+ matrix.cons_vec_append,
+ matrix.cons_vec_alt0,
+ matrix.cons_val_zero],
+    rw exercise_part_one_var (v) (he),
+    unfold norm_D_vec,
+    simp only [neg_mul, matrix.vec2_dot_product, pi.neg_apply, pi.sub_apply],
+    unfold mul_vec,
+    simp only [matrix.vec2_dot_product, pi.neg_apply, mul_neg, pi.sub_apply],
+    rw hd.apply 1 0,
+    ring,
 
 
   end 
-
-
+def k_i_j (i j : fin(3)) (he : (i : ℕ )  ≠ (j : ℕ) ) : fin (3) := 
+begin
+  refine ⟨ (3 - (i : ℕ ) - (j : ℕ )) , _⟩ ,
+  by_contra,
+  simp at h,
+  rw nat.sub_sub at h,
+  simp at h,
+  
+end
+lemma zero_un :
+  ¬ 0 = 1 := 
+  by sorry
+#check (k_i_j (0.fin(3) 1.fin(3))(zero_un))
 
 /-- The definition of the `e_{i,j}` -/
-def associated_vectors (v : matrix (fin (d+1)) (fin d) R) (i j : fin (d+1)) (l : fin d) : R :=
-sorry
+def associated_vectors (v : matrix (fin (3)) (fin 2) R) (i j : fin (3)) : fin 2 → R := 
+if h : i = j then 0 else 
+let k := third_element i j h in 
+![- v k 1, v k 0]
 
+variables {v : matrix (fin (3)) (fin 2) R} {D : matrix (fin 2) (fin 2) R}
+/- to check normalization and sign-/
 local notation `e` := associated_vectors v
 
-lemma associated_vectors_def (i j k : fin (d+1)) (hij : i < j) :
+lemma associated_vectors_def (i j k : fin (3)) (hij : i < j) :
   e i j ⬝ᵥ v k = kronecker_delta R i k - kronecker_delta R j k :=
-sorry
+  begin
+  fin_cases i;
+  fin_cases j,
+  all_goals{norm_num at hij},
+  fin_cases k,
+  norm_num,
+  unfold kronecker_delta,
+  unfold associated_vectors,
+  norm_num,
+  
+    
+  end
 
 /-- Lemma B.2. The right-hand side sums over all `i` and all `j > i`. -/
 lemma selling_formula (vsb : is_superbase v) (Dsymm : D.is_symm) :
