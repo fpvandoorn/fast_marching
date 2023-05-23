@@ -72,6 +72,11 @@ begin
   apply inu,
   apply inv,
 end
+lemma my_lemma (f: ℝ→ℝ) (f':ℝ)(x:ℝ): has_deriv_at f f' x ↔ (λ (h : ℝ), f (x+h) - f x - h * f') =o[𝓝 0] λ (h : ℝ), h:=
+begin
+  rw has_fderiv_at ,
+
+end
 
 /- Harder: prove the following result. It might be useful to first take a look at the following
 theorems in mathlib, and to prove a variant of `has_deriv_at_iff_is_o` that is closer to
@@ -81,9 +86,22 @@ theorems in mathlib, and to prove a variant of `has_deriv_at_iff_is_o` that is c
 #check @has_fderiv_at_iff_is_o_nhds_zero
 example (u : ℝ → ℝ) (x : ℝ) (hu : differentiable_at ℝ u x) :
   (λ h,  max 0 (max ((u x - u (x - h)) / h) ((u x - u (x + h) / h))) - deriv u x)
-  =o[𝓝 x] λ h, h :=
+  =o[𝓝 0] λ h, h :=
 begin
-  sorry
+  have h : (λ (h : ℝ), (max ((u x - u (x - h)) / h) (u x - u (x + h) / h))- deriv u x) =o[𝓝 0] λ (h : ℝ),h,
+  {rw is_o_iff,
+  intros c hc,
+  rw eventually_nhds_iff,
+  split,
+  split,
+  intro y,
+  rw ← max_sub_sub_right ((u x - u (x - y)) / y)  (u x - u (x + y) / y) (deriv u x),
+  }
+
+
 end
 
 end asymptotics
+
+  has_fderiv_at_filter, ← map_add_left_nhds_zero x, is_o_map],
+  simp [(∘)]
