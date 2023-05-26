@@ -74,7 +74,10 @@ begin
 end
 lemma my_lemma (f: ℝ→ℝ) (f':ℝ)(x:ℝ): has_deriv_at f f' x ↔ (λ (h : ℝ), f (x+h) - f x - h * f') =o[𝓝 0] λ (h : ℝ), h:=
 begin
-  rw has_fderiv_at ,
+  rw has_deriv_at_iff_is_o,
+  rw ← map_add_left_nhds_zero x,
+  rw is_o_map,
+  simp [(∘)],
 
 end
 
@@ -84,11 +87,21 @@ theorems in mathlib, and to prove a variant of `has_deriv_at_iff_is_o` that is c
 `x + h` and `x`. -/
 #check @has_deriv_at_iff_is_o
 #check @has_fderiv_at_iff_is_o_nhds_zero
+
+lemma max_1_lip (a b c d :ℝ ) : |(max a b)-(max c d)|≤ max (|a-b|) (|c-d|) :=
+begin
+sorry
+
+end
+
+#check max_1_lip
+
+
 example (u : ℝ → ℝ) (x : ℝ) (hu : differentiable_at ℝ u x) :
-  (λ h,  max 0 (max ((u x - u (x - h)) / h) ((u x - u (x + h) / h))) - deriv u x)
+  (λ h,  max 0 (max ((u x - u (x - h)) / h) ((u x - u (x + h) / h))) - |deriv u x|)
   =o[𝓝 0] λ h, h :=
 begin
-  have h : (λ (h : ℝ), (max ((u x - u (x - h)) / h) (u x - u (x + h) / h))- deriv u x) =o[𝓝 0] λ (h : ℝ),h,
+  have h : (λ (h : ℝ), (max ((u x - u (x - h)) / h) (u x - u (x + h) / h))- |deriv u x|  ) =o[𝓝 0] λ (h : ℝ),h,
   {rw is_o_iff,
   intros c hc,
   rw eventually_nhds_iff,
@@ -96,12 +109,13 @@ begin
   split,
   intro y,
   rw ← max_sub_sub_right ((u x - u (x - y)) / y)  (u x - u (x + y) / y) (deriv u x),
-  }
-
+  sorry,
+  sorry,
+  sorry,}
+  have ho :  (λ (ho : ℝ) 0) =o[𝓝 0] λ (ho : ℝ),ho, 
+  {}
 
 end
 
 end asymptotics
 
-  has_fderiv_at_filter, ← map_add_left_nhds_zero x, is_o_map],
-  simp [(∘)]
