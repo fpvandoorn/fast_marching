@@ -56,9 +56,9 @@ begin
   cases hv with tv pv,
   use tu∩tv,
   cases pv with dv jv,
-  cases pu with du ju, 
+  cases pu with du ju,
   cases ju with opu inu,
-  cases jv with opv inv, 
+  cases jv with opv inv,
   split,
   intros x hx,
   specialize du x hx.1,
@@ -72,7 +72,9 @@ begin
   apply inu,
   apply inv,
 end
-lemma my_lemma (f: ℝ→ℝ) (f':ℝ)(x:ℝ): has_deriv_at f f' x ↔ (λ (h : ℝ), f (x+h) - f x - h * f') =o[𝓝 0] λ (h : ℝ), h:=
+
+lemma my_lemma {f : ℝ → ℝ} {f' : ℝ} {x : ℝ} :
+  has_deriv_at f f' x ↔ (λ (h : ℝ), f (x+h) - f x - h * f') =o[𝓝 0] λ (h : ℝ), h:=
 begin
   rw has_deriv_at_iff_is_o,
   rw ← map_add_left_nhds_zero x,
@@ -81,26 +83,26 @@ begin
 
 end
 
-/- Harder: prove the following result. It might be useful to first take a look at the following
-theorems in mathlib, and to prove a variant of `has_deriv_at_iff_is_o` that is closer to
-`has_fderiv_at_iff_is_o_nhds_zero`, where instead of working with `x` and `x - x'` you work with
-`x + h` and `x`. -/
 #check @has_deriv_at_iff_is_o
 #check @has_fderiv_at_iff_is_o_nhds_zero
 
+
+/- This is false: fix the statement and then proof it with `lipschitz_with_max`,
+  `lipschitz_with_iff_dist_le_mul`, `prod.dist_eq`, `real.dist_eq` -/
 lemma max_1_lip (a b c d :ℝ ) : |(max a b)-(max c d)|≤ max (|a-b|) (|c-d|) :=
 begin
-sorry
-
+  sorry
 end
 
 #check max_1_lip
 
 
+-- I think this statement is not quite right. See the next example for a corrected statement
 example (u : ℝ → ℝ) (x : ℝ) (hu : differentiable_at ℝ u x) :
   (λ h,  max 0 (max ((u x - u (x - h)) / h) ((u x - u (x + h) / h))) - |deriv u x|)
   =o[𝓝 0] λ h, h :=
 begin
+  have := my_lemma.mp hu.has_deriv_at, -- this will be useful
   have h : (λ (h : ℝ), (max ((u x - u (x - h)) / h) (u x - u (x + h) / h))- |deriv u x|  ) =o[𝓝 0] λ (h : ℝ),h,
   {rw is_o_iff,
   intros c hc,
@@ -111,10 +113,19 @@ begin
   rw ← max_sub_sub_right ((u x - u (x - y)) / y)  (u x - u (x + y) / y) (deriv u x),
   sorry,
   sorry,
-  sorry,}
-  have ho :  (λ (ho : ℝ) 0) =o[𝓝 0] λ (ho : ℝ),ho, 
+  sorry},
+  have ho :  (λ (ho : ℝ) 0) =o[𝓝 0] λ (ho : ℝ),ho,
   {}
 
+end
+
+example (u : ℝ → ℝ) (x : ℝ) (hu : differentiable_at ℝ u x) :
+  (λ h,  | max (u x - u (x - h)) (u x - u (x + h)) - |h * deriv u x| |)
+  =o[𝓝 0] λ h, h :=
+begin
+  have := my_lemma.mp hu.has_deriv_at, -- this is how you can use `my_lemma`.
+  -- apply (the corrected version of) `max_1_lip` (also using `abs_eq_max_neg`, then `is_o.max`,
+  -- and then `my_lemma`, or variants of `my_lemma`.
 end
 
 end asymptotics
