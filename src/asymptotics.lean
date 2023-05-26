@@ -80,7 +80,20 @@ begin
   rw ← map_add_left_nhds_zero x,
   rw is_o_map,
   simp [(∘)],
+end
 
+lemma my_lemma2 {f : ℝ → ℝ} {f' : ℝ} {x : ℝ} :
+  has_deriv_at f f' x ↔ (λ (h : ℝ), f x - f (x+h) + h * f') =o[𝓝 0] λ (h : ℝ), h:=
+begin
+  rw [my_lemma, ← is_o_neg_left],
+  congr', ext x, ring,
+end
+
+lemma my_lemma3 {f : ℝ → ℝ} {f' : ℝ} {x : ℝ} :
+  has_deriv_at f f' x ↔ (λ (h : ℝ), f x - f (x-h) - h * f') =o[𝓝 0] λ (h : ℝ), h:=
+begin
+  rw [← nhds_zero_symm', my_lemma2, is_o_map],
+  simp [(∘)]
 end
 
 #check @has_deriv_at_iff_is_o
