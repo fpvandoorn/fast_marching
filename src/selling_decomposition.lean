@@ -423,27 +423,58 @@ lemma associated_vectors_def (i j k : fin (3)) (hij : i < j)(vsb : is_direct_sup
   unfold kronecker_delta,
   unfold associated_vectors_direct,
   split_ifs,
-  repeat{
   exfalso,
+  repeat{
   simp only [nat.one_ne_zero, nat.bit1_eq_one, fin.zero_eq_one_iff] at h,
   apply h,},
   repeat{
   norm_num at h_2,},
+  exfalso,
+  simp only [nat.one_ne_zero, nat.bit1_eq_one, fin.zero_eq_one_iff] at h,
+  apply h,
+  exfalso,
+  simp only [nat.one_ne_zero, nat.bit1_eq_one, fin.zero_eq_one_iff] at h,
+  apply h,
+  exfalso,
   norm_num at h_3,
-  norm_num at h,
-  simp only [matrix.head_cons,
- neg_mul,
- matrix.vec2_dot_product,
- zero_sub,
- matrix.cons_val_one,
- third_element_0_1,
- matrix.cons_val_zero],
+  norm_num at h_3,
+  norm_num at h_1,
+  norm_num,
   unfold is_direct_superbase at vsb,
   rw det_fin_two at vsb,
   simp only [fin.succ_zero_eq_one', id.def, matrix.submatrix_apply, fin.succ_one_eq_two'] at vsb,
   linarith,
-  norm_num at h_1,
   },
+  {
+    unfold kronecker_delta,
+    unfold associated_vectors_direct,
+    split_ifs,
+    exfalso,
+    norm_num at h,
+    exfalso, 
+    norm_num at h,
+        exfalso, 
+    norm_num at h,
+        exfalso, 
+    norm_num at h,
+    exfalso,
+    rw ← h_2 at h_3,
+    norm_num at h_3,
+    norm_num,
+    rw ← h_2,
+  rw exercise_part_one (v) (vsb),
+  unfold is_direct_superbase at vsb,
+  rw det_fin_two at vsb,
+  simp at h_1,
+  norm_num at h_1,
+  simp only [fin.succ_zero_eq_one', id.def, matrix.submatrix_apply, fin.succ_one_eq_two'] at vsb,
+  norm_num at vsb,
+  norm_num,
+  ring_nf,
+  exfalso,
+  norm_num at vsb,
+  sorry},
+  
 
   /- norm_num,
   rw exercise_part_one (v) (vsb),
@@ -585,14 +616,14 @@ lemma associated_vectors_def (i j k : fin (3)) (hij : i < j)(vsb : is_superbase 
   end
 
 /-- Lemma B.2. The right-hand side sums over all `i` and all `j > i`. -/
-lemma selling_formula (vsb : is_superbase v) (Dsymm : D.is_symm) :
+lemma selling_formula (vsb : is_direct_superbase v) (Dsymm : D.is_symm) :
   D = - ∑ i, ∑ j in Ioi i, (v i ⬝ᵥ D.mul_vec (v j)) • vec_mul_vec (e i j vsb) (e i j vsb) :=
 begin
   have B := - ∑ i, ∑ j in Ioi i, (v i ⬝ᵥ D.mul_vec (v j)) • vec_mul_vec (e i j vsb) (e i j vsb) ,
   have h :  ∀ k l : nat, v k ⬝ᵥ (- ∑ i, ∑ j in Ioi i, (v i ⬝ᵥ D.mul_vec (v j)) • vec_mul_vec (e i j vsb) (e i j vsb) ).mul_vec (v l) = v k ⬝ᵥ D.mul_vec (v l),
   intros k l,
   by_cases h2 : k < l ∧ l ≤ 2,
-  f
+  
 
 
 

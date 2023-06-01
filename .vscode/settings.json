@@ -1,0 +1,4 @@
+{
+    "lean.memoryLimit": 10000,
+    "lean.timeLimit": 10000000
+}
