@@ -56,9 +56,9 @@ begin
   cases hv with tv pv,
   use tu∩tv,
   cases pv with dv jv,
-  cases pu with du ju,
+  cases pu with du ju, 
   cases ju with opu inu,
-  cases jv with opv inv,
+  cases jv with opv inv, 
   split,
   intros x hx,
   specialize du x hx.1,
@@ -72,9 +72,8 @@ begin
   apply inu,
   apply inv,
 end
-
-lemma my_lemma {f : ℝ → ℝ} {f' : ℝ} {x : ℝ} :
-  has_deriv_at f f' x ↔ (λ (h : ℝ), f (x+h) - f x - h * f') =o[𝓝 0] λ (h : ℝ), h:=
+lemma my_lemma (f: ℝ→ℝ) (f':ℝ)(x:ℝ): 
+has_deriv_at f f' x ↔ (λ (h : ℝ), f (x+h) - f x - h * f') =o[𝓝 0] λ (h : ℝ), h:=
 begin
   rw has_deriv_at_iff_is_o,
   rw ← map_add_left_nhds_zero x,
@@ -89,33 +88,85 @@ begin
   congr', ext x, ring,
 end
 
-lemma my_lemma3 {f : ℝ → ℝ} {f' : ℝ} {x : ℝ} :
-  has_deriv_at f f' x ↔ (λ (h : ℝ), f x - f (x-h) - h * f') =o[𝓝 0] λ (h : ℝ), h:=
-begin
-  rw [← nhds_zero_symm', my_lemma2, is_o_map],
-  simp [(∘)]
-end
-
+/- Harder: prove the following result. It might be useful to first take a look at the following
+theorems in mathlib, and to prove a variant of `has_deriv_at_iff_is_o` that is closer to
+`has_fderiv_at_iff_is_o_nhds_zero`, where instead of working with `x` and `x - x'` you work with
+`x + h` and `x`. -/
 #check @has_deriv_at_iff_is_o
 #check @has_fderiv_at_iff_is_o_nhds_zero
 
 
 /- This is false: fix the statement and then proof it with `lipschitz_with_max`,
   `lipschitz_with_iff_dist_le_mul`, `prod.dist_eq`, `real.dist_eq` -/
-lemma max_1_lip (a b c d :ℝ ) : |(max a b)-(max c d)|≤ max (|a-b|) (|c-d|) :=
+lemma max_1_lip (a b c d :ℝ ) : |(max a b)-(max c d)|≤ max (|a-c|) (|b-d|) :=
 begin
-  sorry
+by_cases (a<b),
+by_cases (c<d),
+rw max_eq_right,
+rw max_eq_right,
+rw le_max_iff,
+right,
+simp,
+rw lt_iff_le_and_ne at h,
+exact h.1,
+rw lt_iff_le_and_ne at h,
+by_cases (b<d),
+repeat{rw abs_eq_max_neg},
+rw max_eq_left ,
+rw max_eq_right,
+simp,
+linarith,
+
+ 
 end
 
 #check max_1_lip
 
 
--- I think this statement is not quite right. See the next example for a corrected statement
+example (u : ℝ → ℝ) (x u' : ℝ) (hu : has_deriv_at u u' x) :
+  (λ h,  max (u x - u (x - h)) (u x - u (x + h)) - |h * u'|)
+  =o[𝓝 0] λ h, h :=
+begin
+rw is_o_iff,
+  intros c hc,
+  rw eventually_nhds_iff,
+  --rw real.norm_eq_abs,
+let h1 := (my_lemma u u' x).1 hu,
+rw is_o_iff at h1,
+specialize h1 hc,
+rw eventually_nhds_iff at h1,
+rcases h1 with ⟨V,  ⟨H, V_open, V0⟩⟩,
+let W:= V ∩ -V,
+use W,
+split,
+{intros h Wh,
+  rw abs_eq_max_neg,
+  repeat{rw real.norm_eq_abs},
+  let max_diff := max_1_lip (u x - u (x - h))  (u x - u (x + h)) (h*u') (-(h * u')) ,
+  let diffp := H h Wh.1,
+  repeat{rw real.norm_eq_abs at diffp},
+  let diffm := H (-h) Wh.2,
+  repeat{rw real.norm_eq_abs at diffm},
+  rw abs_neg at diffm,
+  rw ← abs_neg at diffm,
+  rw ← abs_neg at diffp,
+  let F := max_le diffp diffm,
+  rw max_comm at F,
+  --apply le_trans max_diff F,
+  sorry},
+split,
+{sorry},
+{simp,
+exact V0,},
+--rcases ha with,
+end
+
 example (u : ℝ → ℝ) (x : ℝ) (hu : differentiable_at ℝ u x) :
   (λ h,  max 0 (max ((u x - u (x - h)) / h) ((u x - u (x + h) / h))) - |deriv u x|)
   =o[𝓝 0] λ h, h :=
 begin
-  have := my_lemma.mp hu.has_deriv_at, -- this will be useful
+
+/--
   have h : (λ (h : ℝ), (max ((u x - u (x - h)) / h) (u x - u (x + h) / h))- |deriv u x|  ) =o[𝓝 0] λ (h : ℝ),h,
   {rw is_o_iff,
   intros c hc,
@@ -126,19 +177,10 @@ begin
   rw ← max_sub_sub_right ((u x - u (x - y)) / y)  (u x - u (x + y) / y) (deriv u x),
   sorry,
   sorry,
-  sorry},
-  have ho :  (λ (ho : ℝ) 0) =o[𝓝 0] λ (ho : ℝ),ho,
+  sorry,}
+  have ho :  (λ (ho : ℝ) 0) =o[𝓝 0] λ (ho : ℝ),ho, 
   {}
-
-end
-
-example (u : ℝ → ℝ) (x : ℝ) (hu : differentiable_at ℝ u x) :
-  (λ h,  | max (u x - u (x - h)) (u x - u (x + h)) - |h * deriv u x| |)
-  =o[𝓝 0] λ h, h :=
-begin
-  have := my_lemma.mp hu.has_deriv_at, -- this is how you can use `my_lemma`.
-  -- apply (the corrected version of) `max_1_lip` (also using `abs_eq_max_neg`, then `is_o.max`,
-  -- and then `my_lemma`, or variants of `my_lemma`.
+-/
 end
 
 end asymptotics
