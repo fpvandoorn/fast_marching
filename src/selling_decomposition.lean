@@ -623,6 +623,10 @@ begin
   have h :  ∀ k l : nat, v k ⬝ᵥ (- ∑ i, ∑ j in Ioi i, (v i ⬝ᵥ D.mul_vec (v j)) • vec_mul_vec (e i j vsb) (e i j vsb) ).mul_vec (v l) = v k ⬝ᵥ D.mul_vec (v l),
   intros k l,
   by_cases h2 : k < l ∧ l ≤ 2,
+  norm_num,
+  rw finset.sum,
+  rw sum_fin_two,
+  apply associated_vectors_def (2),
   
 
 
