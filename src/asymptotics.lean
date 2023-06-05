@@ -56,9 +56,9 @@ begin
   cases hv with tv pv,
   use tu∩tv,
   cases pv with dv jv,
-  cases pu with du ju, 
+  cases pu with du ju,
   cases ju with opu inu,
-  cases jv with opv inv, 
+  cases jv with opv inv,
   split,
   intros x hx,
   specialize du x hx.1,
@@ -72,7 +72,7 @@ begin
   apply inu,
   apply inv,
 end
-lemma my_lemma (f: ℝ→ℝ) (f':ℝ)(x:ℝ): 
+lemma my_lemma (f: ℝ→ℝ) (f':ℝ)(x:ℝ):
 has_deriv_at f f' x ↔ (λ (h : ℝ), f (x+h) - f x - h * f') =o[𝓝 0] λ (h : ℝ), h:=
 begin
   rw has_deriv_at_iff_is_o,
@@ -96,7 +96,7 @@ theorems in mathlib, and to prove a variant of `has_deriv_at_iff_is_o` that is c
 #check @has_fderiv_at_iff_is_o_nhds_zero
 
 
-/- This is false: fix the statement and then proof it with `lipschitz_with_max`,
+/- This is false: fix the statement and then prove it with `lipschitz_with_max`,
   `lipschitz_with_iff_dist_le_mul`, `prod.dist_eq`, `real.dist_eq` -/
 lemma max_1_lip (a b c d :ℝ ) : |(max a b)-(max c d)|≤ max (|a-c|) (|b-d|) :=
 begin
@@ -116,7 +116,10 @@ let hc:= not_lt.1 hb,
 rw max_eq_left,
 rw le_max_iff,
 left,
-simp,
+simp, -- this is not provable, what if a = c = 0, b = 1?
+-- I gave some hints of useful lemmas in mathlib above the lemma statement. Use those.
+-- Or alternatively prove this lemma (carefully!) on paper first, and then try to repeat that
+-- proof in Lean. Feel free to delete comments like these in your next submission.
 
 repeat{rw abs_eq_max_neg},
 rw max_eq_left ,
@@ -124,7 +127,7 @@ rw max_eq_right,
 simp,
 linarith,
 
- 
+
 end
 
 #check max_1_lip
@@ -159,11 +162,14 @@ split,
   rw ← abs_neg at diffp,
   let F := max_le diffp diffm,
   rw max_comm at F,
-  --apply le_trans max_diff F,
-  -- the previous line don't works and I don't konw to make it works
-  sorry},
+  apply le_trans max_diff _,
+  apply le_trans _ F,
+  simp only [← sub_eq_add_neg],
+  apply le_of_eq,
+  congr' 2; ring },
 split,
-{--I don't know how to prove that -V is open
+{
+  have V_neg_open := V_open.neg,
   sorry},
 {simp,
 exact V0,},
@@ -187,7 +193,7 @@ begin
   sorry,
   sorry,
   sorry,}
-  have ho :  (λ (ho : ℝ) 0) =o[𝓝 0] λ (ho : ℝ),ho, 
+  have ho :  (λ (ho : ℝ) 0) =o[𝓝 0] λ (ho : ℝ),ho,
   {}
 -/
 end
