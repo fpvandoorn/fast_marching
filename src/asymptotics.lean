@@ -139,8 +139,7 @@ example (u : ℝ → ℝ) (x u' : ℝ) (hu : has_deriv_at u u' x) :
 begin
 rw is_o_iff,
   intros c hc,
-  rw eventually_nhds_iff,
-  --rw real.norm_eq_abs,
+  rw eventually_nhds_iff,  
 let h1 := (my_lemma u u' x).1 hu,
 rw is_o_iff at h1,
 specialize h1 hc,
@@ -170,10 +169,9 @@ split,
 split,
 {
   have V_neg_open := V_open.neg,
-  sorry},
+  apply is_open.inter V_open V_neg_open,},
 {simp,
 exact V0,},
---rcases ha with,
 end
 
 example (u : ℝ → ℝ) (x : ℝ) (hu : differentiable_at ℝ u x) :
