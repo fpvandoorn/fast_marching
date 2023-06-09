@@ -48,7 +48,14 @@ end
 -- end scratchpad
 
 /- Example 1: show that `((-1,-1), (1, 0), (0, 1))` is a superbase. -/
-example : is_direct_superbase !![(-1 : ℤ), -1; 1, 0; 0, 1] :=
+
+def canonical_superbase : matrix (fin 2) (fin 3) ℤ := !![(-1 : ℤ ) , 1 , 0 ; - 1 , 0 , 1] 
+def canonical_superbase_b : matrix (fin 2) (fin 3) ℤ := 
+![ [(-1 : ℤ ) , - 1] , matrix.col ![(1 : ℤ ) , 0] ,matrix.col ![(0 : ℤ ) ,  1] ]
+
+#check (!![1, 2 ; 3 , 4] )
+
+lemma canonical_superbase_is_sb : is_direct_superbase canonical_superbase :=
 begin
   simp only [is_direct_superbase],
   split,
@@ -57,6 +64,16 @@ begin
   refl,
 
 end
+ /- Expression of a superbase with the canonical one-/
+
+lemma superbase_with_canonical (e : matrix (fin 3) (fin 2) ℤ ) (he : is_direct_superbase e) :
+  e = matrix.mul (!![e 1 0, e 1 1 ; e 2 0 , e 2 1] : matrix (fin 2) (fin 2) ℤ ) ( !![(-1 : ℤ ), 1, 0 ; - 1, 0, 1] : matrix (fin 2) (fin 3) ℤ ):=
+
+example : (!![1, 2 ; 3 , 4]).mul (!![(-1 : ℤ ), 1, 0 ; - 1, 0, 1]) = !![- 3 , 1 , 2 ; - 7 , 3 , 4] :=
+begin
+  simp,
+  norm_num,
+end 
 
 /- Lemma: if `(e₀, e₁, e₂)` is a superbase, then so is `(- e₀, e₁, e₀ - e₁)`. -/
 
@@ -266,6 +283,18 @@ lemma exercise_part_one_var (e : matrix (fin 3) (fin 2) R) (he : is_direct_super
 
 def norm_D_vec (v : fin d → R) (D : matrix (fin d) (fin d) R) := v ⬝ᵥ mul_vec D v
 def E_D_vec (v : matrix (fin (d+1)) (fin d) R) (D : matrix (fin d) (fin d) R) := ∑ i , norm_D_vec (v i) (D)
+#check finset.min 
+#check finset.min'
+
+/--
+Exercise : forall v0 : R^2 there exists v : Z^2 which minimizes |v-v0|
+Desired proof : 
+We can restrict our attention to v such that |v-v0|<=|0-v0|.
+There are a finite number of them, so one is minimal.
+--/
+example (v₀ : fin 3 → ℝ) : ∃ v : fin 3 → ℝ, (∀ i, v i ∈ Z) ∧ ∀ v' : fin 3 → ℝ, (∀ i, v' i ∈ Z) →  
+  ‖ v - v₀ ‖ ≤ ‖ v' - v₀ ‖ :=
+sorry 
 
 lemma E_D_superbase_vec (v : matrix (fin 3) (fin 2) R) (D : matrix (fin 2) (fin 2) R) (he : is_superbase v) (hd : D.is_symm):
   E_D_vec (![- v 0, v 1, v 0 - v 1]) (D) = E_D_vec(v) (D) - 4 * v 0 ⬝ᵥ mul_vec D (v 1 ):=
@@ -314,15 +343,41 @@ lemma zero_un :
 
 /-- The definition of the `e_{i,j}` with a direct superbase-/
 
+def signature_perm_3 (l : list ℤ ) : ℤ :=
+if l = [0,1,2] then 1 else 
+if l = [0,2,1] then - 1 else
+if l = [1,2,0] then 1 else
+if l = [1,0,2] then - 1 else
+if l = [2,0,1] then 1 else
+- 1
+
 
 def associated_vectors_direct (v : matrix (fin (3)) (fin 2) R) (i j : fin (3)) 
 (he : is_direct_superbase v) : fin 2 → R := 
 if h : i = j then 0 else
 let k := third_element i j h 
 in 
-if g : equiv.perm.sign ( list.form_perm ([i,j,k]) ) = 1 then ![ - v k 1, v k 0] else ![  v k 1, - v k 0]
+if g : signature_perm_3 ( [i,j,k]) = 1 then ![ - v k 1, v k 0] else ![  v k 1, - v k 0]
+
+example : equiv.perm.sign (list.form_perm([(0:fin 3) ,1,2])) = 1 :=
+begin
+simp,norm_num,
+end
+
+example : equiv.perm.sign (list.form_perm([(0:fin 3),2,1])) = 1 :=
+begin
+simp,norm_num,
+end
+
+example : equiv.perm.sign (![(0:fin 3),2,1]) = 1 :=
+begin
+simp,norm_num,
+end
+
+#check equiv.perm
 
 
+#check equiv.perm.sign (list.form_perm([0,1,2]))
 /-- The definition of the `e_{i,j}` -/
 def associated_vectors (v : matrix (fin (3)) (fin 2) R) (i j : fin (3)) (he : is_superbase v) : fin 2 → R := 
 if h : i = j then 0 else
@@ -467,13 +522,70 @@ lemma associated_vectors_def (i j k : fin (3)) (hij : i < j)(vsb : is_direct_sup
   rw det_fin_two at vsb,
   simp at h_1,
   norm_num at h_1,
+  simp only [matrix.head_cons,
+ neg_mul,
+ matrix.vec2_dot_product,
+ third_element_0_2,
+ zero_sub,
+ matrix.cons_val_one,
+ matrix.cons_val_zero],
+  rw ← h_3,
+  unfold is_direct_superbase at vsb,
+  rw det_fin_two at vsb,
   simp only [fin.succ_zero_eq_one', id.def, matrix.submatrix_apply, fin.succ_one_eq_two'] at vsb,
-  norm_num at vsb,
-  norm_num,
-  ring_nf,
   exfalso,
-  norm_num at vsb,
-  sorry},
+  simp only [algebra_map.coe_one,
+ fin.coe_zero,
+ third_element_0_2,
+ fin.coe_one,
+ fin.coe_two,
+ int.coe_nat_bit0,
+ zmod.nat_cast_self,
+ coe_coe] at h_1,
+  norm_num at h_1,
+  norm_num,
+  have p : k=1,
+  by_contra,
+  fin_cases k,
+  simp only [eq_self_iff_true, not_true] at h_2, 
+  apply h_2,
+  simp only [eq_self_iff_true, not_true] at h,
+  apply h,
+  simp only [eq_self_iff_true, not_true] at h_3,
+  apply h_3,
+  rw p,
+  ring,
+  exfalso,
+  rw ← h_2 at h_3,
+  norm_num at h_3,
+  rw ← h_2,
+  rw exercise_part_one (v) (vsb),
+  simp only [tsub_zero,
+ matrix.head_cons,
+ neg_mul,
+ matrix.vec2_dot_product,
+ third_element_0_2,
+ matrix.cons_val_one,
+ matrix.cons_val_zero],
+ unfold is_direct_superbase at vsb,
+ rw det_fin_two at vsb,
+ simp only [fin.succ_zero_eq_one', id.def, matrix.submatrix_apply, fin.succ_one_eq_two'] at vsb,
+ norm_num,
+ ring_nf,
+ rw add_comm,
+ linarith,
+ rw ← h_3, 
+ simp only [matrix.head_cons,
+ neg_mul,
+ matrix.vec2_dot_product,
+ third_element_0_2,
+ zero_sub,
+ matrix.cons_val_one,
+ matrix.cons_val_zero],
+  }
+
+
+
   
 
   /- norm_num,
@@ -615,7 +727,31 @@ lemma associated_vectors_def (i j k : fin (3)) (hij : i < j)(vsb : is_superbase 
 
   end
 
+
 /-- Lemma B.2. The right-hand side sums over all `i` and all `j > i`. -/
+@[simp]lemma Ioi_0 (f : fin 3 → R) : ∑ i in Ioi 0, f i = f 1 + f 2 :=
+begin
+  simp,
+end
+
+@[simp]lemma Ioi_1 (f : fin 3 → R) : ∑ i in Ioi 1, f i = f 2 :=
+begin
+  rw [← add_zero (f 2)], refl,
+end 
+
+@[simp]lemma Ioi_2 (f : fin 3 → R) : ∑ i in Ioi 2, f i = 0 :=
+begin
+  refl,
+end 
+
+lemma double_sum  (f : matrix (fin (3)) (fin 3) R) : ∑ i, ∑ j in Ioi i, f i j = f 0 1 + f 0 2 + f 1 2 :=
+begin
+
+  repeat { rw fin.Ioi_eq_finset_subtype},
+  rw sum_fin_three,
+  simp,
+end
+
 lemma selling_formula (vsb : is_direct_superbase v) (Dsymm : D.is_symm) :
   D = - ∑ i, ∑ j in Ioi i, (v i ⬝ᵥ D.mul_vec (v j)) • vec_mul_vec (e i j vsb) (e i j vsb) :=
 begin
@@ -624,8 +760,8 @@ begin
   intros k l,
   by_cases h2 : k < l ∧ l ≤ 2,
   norm_num,
-  rw finset.sum,
   rw sum_fin_two,
+  rw finset.sum,
   apply associated_vectors_def (2),
   
 
@@ -658,4 +794,51 @@ theorem selling_algorithm (vsb : is_superbase v) (vint : ∀ i j, v i j ∈ Z)
     is_superbase v' ∧ is_obtuse v' D ∧ ∀ i j, v' i j ∈ Z :=
 sorry
 
+example (a b : ℤ) : set.finite (set.Icc a b) := set.finite_Icc a b
+#check @set.finite.image 
+
+local notation `coeZR` := (coe : ℤ → ℝ)
+
+#check int.floor 
+example {K : ℝ} : coeZR '' (set.Icc (-int.floor K) (int.floor K)) = { v : ℝ | v ∈ Z ∧ |v| ≤ K } :=
+begin
+ext,simp,
+end
+
+example {K : ℝ} : set.finite { v : ℝ | v ∈ Z ∧ |v| ≤ K } :=
+sorry 
+
+
+/--
+Preliminary exercise: {v in R^2 | forall i, v i in Z and |v i| <= K} 
+is a nonempty finite set, for any K>=0.
+--/
+example {K : ℝ} : set.finite { v : fin 2 → ℝ | ∀ i, v i ∈ Z ∧ |v i| ≤ K } :=
+sorry 
+
+example {K : ℝ} : (set.univ).pi (λ i : fin 2, { v : ℝ | v ∈ Z ∧ |v| ≤ K }) = 
+  { v : fin 2 → ℝ | ∀ i, v i ∈ Z ∧ |v i| ≤ K } :=
+begin
+  ext,
+  simp,
+end
+
+example (v₀ : fin 2 → ℝ) : ∃ v : fin 2 → ℤ, ∀ v' : fin 2 → ℤ,  
+  ‖ coeZR ∘ v - v₀ ‖ ≤ ‖ coeZR ∘ v' - v₀ ‖ :=
+begin
+
+end 
+/--
+Exercise : forall v0 : R^2 there exists v : Z^2 which minimizes |v-v0|
+Desired proof : 
+We can restrict our attention to v such that |v-v0|<=|0-v0|.
+There are a finite number of them, so one is minimal.
+--/
+example (v₀ : fin 3 → ℝ) : ∃ v : fin 3 → ℝ, (∀ i, v i ∈ Z) ∧ ∀ v' : fin 3 → ℝ, (∀ i, v' i ∈ Z) →  
+  ‖ v - v₀ ‖ ≤ ‖ v' - v₀ ‖ :=
+sorry 
+#check @finset.pi
+#check @set.finite.pi 
+#check @set.finite.to_finset
+#check @set.pi 
 end real
