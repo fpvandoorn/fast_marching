@@ -95,13 +95,26 @@ theorems in mathlib, and to prove a variant of `has_deriv_at_iff_is_o` that is c
 #check @has_deriv_at_iff_is_o
 #check @has_fderiv_at_iff_is_o_nhds_zero
 
+-- abs_max_sub_max_le_max
 
 /- This is false: fix the statement and then prove it with `lipschitz_with_max`,
   `lipschitz_with_iff_dist_le_mul`, `prod.dist_eq`, `real.dist_eq` -/
 lemma max_1_lip (a b c d :ℝ ) : |(max a b)-(max c d)|≤ max (|a-c|) (|b-d|) :=
 begin
+-- exact match dans librarie
+exact abs_max_sub_max_le_max a b c d,
+
+-- Question : how to go from edist (used in Lipschitz_max) to dist ?
 repeat{rw ← real.dist_eq},
-rw ← prod.dist_eq [abs] [abs],
+let k := lipschitz_with_max,
+unfold lipschitz_with at k,
+
+simp at k,
+unfold edist at k,
+rw real.dist_eq at k,
+unfold pseudo_metric_space.edist at k,
+ 
+-- rw ← prod.dist_eq [abs] [abs],
 
 
 
@@ -116,6 +129,7 @@ rw lt_iff_le_and_ne at hb,
 exact hb.1,
 rw lt_iff_le_and_ne at ha,
 exact ha.1,
+
 rw max_eq_right,
 let hc:= not_lt.1 hb,
 rw max_eq_left,
@@ -179,17 +193,23 @@ split,
 exact V0,},
 end
 
-example (u : ℝ → ℝ) (x u': ℝ) (hu : has_deriv_at u u' x) :
-  (λ h,  max 0 (max ((u x - u (x - h)) ) ((u x - u (x + h) ))) - |h*u'|)
+lemma max_0_u (u : ℝ → ℝ) (x u': ℝ) (hu : has_deriv_at u u' x) :
+  (λ h,  max 0 (max ((u x - u (x - h)) ) ((u x - u (x + h) ))) - |h  *u'|)
   =o[𝓝 0] λ h, h :=
 begin
   have h : (λ (h : ℝ), (max ((u x - u (x - h))) (u x - u (x + h)))- |h*u'|  ) =o[𝓝 0] λ (h : ℝ),h,
   {
-    apply max_o u x u' hu,}
+    apply max_o u x u' hu,},
 
-  have ho : (λ (ho : ℝ),  0) =o[𝓝 0] λ (ho : ℝ),ho ,
-  {}  
+  have ho : (λ (ho : ℝ), (0:ℝ) ) =o[𝓝 0] λ (ho : ℝ), ho ,
+  {simp, },  
+  let k:= is_o.max ho h,
+  simp at k,
+  exact k,
+  sorry,
 end
+
+
 
 end asymptotics
 
