@@ -51,6 +51,9 @@ variables {α : Type*} [add_comm_monoid α]
 lemma sum_fin_three (f : fin 3 → α) : ∑ i, f i = f 0 + f 1 + f 2 :=
 by { norm_num, simp_rw [← add_assoc] }
 
+lemma sum_fin_two (f : fin 2 → α) : ∑ i, f i = f 0 + f 1 :=
+by { norm_num}
+
 @[simp] def third_element_aux (i j : fin 3) (h : i ≠ j) : {x : fin 3 | x ≠ i ∧ x ≠ j} :=
 by { apply fintype.choose_x, revert i j, dsimp [exists_unique], dec_trivial }
 
