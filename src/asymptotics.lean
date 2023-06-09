@@ -100,6 +100,11 @@ theorems in mathlib, and to prove a variant of `has_deriv_at_iff_is_o` that is c
   `lipschitz_with_iff_dist_le_mul`, `prod.dist_eq`, `real.dist_eq` -/
 lemma max_1_lip (a b c d :ℝ ) : |(max a b)-(max c d)|≤ max (|a-c|) (|b-d|) :=
 begin
+repeat{rw ← real.dist_eq},
+rw ← prod.dist_eq [abs] [abs],
+
+
+
 by_cases ha: (a<b),
 by_cases hb: (c<d),
 rw max_eq_right,
@@ -133,7 +138,7 @@ end
 #check max_1_lip
 
 
-example (u : ℝ → ℝ) (x u' : ℝ) (hu : has_deriv_at u u' x) :
+lemma max_o (u : ℝ → ℝ) (x u' : ℝ) (hu : has_deriv_at u u' x) :
   (λ h,  max (u x - u (x - h)) (u x - u (x + h)) - |h * u'|)
   =o[𝓝 0] λ h, h :=
 begin
@@ -174,26 +179,16 @@ split,
 exact V0,},
 end
 
-example (u : ℝ → ℝ) (x : ℝ) (hu : differentiable_at ℝ u x) :
-  (λ h,  max 0 (max ((u x - u (x - h)) / h) ((u x - u (x + h) / h))) - |deriv u x|)
+example (u : ℝ → ℝ) (x u': ℝ) (hu : has_deriv_at u u' x) :
+  (λ h,  max 0 (max ((u x - u (x - h)) ) ((u x - u (x + h) ))) - |h*u'|)
   =o[𝓝 0] λ h, h :=
 begin
+  have h : (λ (h : ℝ), (max ((u x - u (x - h))) (u x - u (x + h)))- |h*u'|  ) =o[𝓝 0] λ (h : ℝ),h,
+  {
+    apply max_o u x u' hu,}
 
-/--
-  have h : (λ (h : ℝ), (max ((u x - u (x - h)) / h) (u x - u (x + h) / h))- |deriv u x|  ) =o[𝓝 0] λ (h : ℝ),h,
-  {rw is_o_iff,
-  intros c hc,
-  rw eventually_nhds_iff,
-  split,
-  split,
-  intro y,
-  rw ← max_sub_sub_right ((u x - u (x - y)) / y)  (u x - u (x + y) / y) (deriv u x),
-  sorry,
-  sorry,
-  sorry,}
-  have ho :  (λ (ho : ℝ) 0) =o[𝓝 0] λ (ho : ℝ),ho,
-  {}
--/
+  have ho : (λ (ho : ℝ),  0) =o[𝓝 0] λ (ho : ℝ),ho ,
+  {}  
 end
 
 end asymptotics
