@@ -170,7 +170,7 @@ split,
 {intros h Wh,
   rw abs_eq_max_neg,
   repeat{rw real.norm_eq_abs},
-  let max_diff := max_1_lip (u x - u (x - h))  (u x - u (x + h)) (h*u') (-(h * u')) ,
+  let max_diff := abs_max_sub_max_le_max (u x - u (x - h))  (u x - u (x + h)) (h*u') (-(h * u')) ,
   let diffp := H h Wh.1,
   repeat{rw real.norm_eq_abs at diffp},
   let diffm := H (-h) Wh.2,
@@ -208,6 +208,42 @@ begin
   exact k,
   sorry,
 end
+
+open finset matrix
+local notation `ℝ2` := (fin 2) → ℝ 
+
+#check has_fderiv_at
+
+noncomputable def upwind_fd (u : ℝ2 → ℝ) (x v:ℝ2) :=
+max (0:ℝ) (max ((u x - u (x - v)) ) ((u x - u (x + v) )))
+
+
+-- TODO : replace du : ℝ2 →L[ℝ] ℝ with gradu : ℝ2
+example (u : ℝ2 → ℝ) (x e : ℝ2) (du : ℝ2 →L[ℝ] ℝ) (hu : has_fderiv_at u du x) :
+(λ (h :ℝ), upwind_fd u x (h•e) - |h *(du e)|  )
+ =o[𝓝 0] λ (h : ℝ), h :=
+begin
+sorry,
+end
+
+
+variables (μ : fin 3 → ℝ) (e : (fin 3) → ℝ2) (D : matrix (fin 2) (fin 2) ℝ) 
+--variables (Dsymm : D.is_symm)
+
+-- TODO : how to write that D admits this decomposition ?
+example : D = ∑ i in (fin 3), μ i • vec_mul_vec (e i) (e i) :=sorry
+variable (hD : D = ∑ i in (fin 3), μ i • vec_mul_vec (e i) (e i) )
+
+example (u:ℝ2 → ℝ) (x : ℝ2) (du : ℝ2 →L[ℝ] ℝ) (hu : has_fderiv_at u du x)
+λ h, ∑ i in fin 3, μ i * (upwind_fd u x (h•e i))^2 - du ⬝ᵥ D.mul_vec du 
+=o[𝓝 0] λ h,h^2
+
+example (u : ℝ2 → ℝ) (x e : ℝ2) (l:ℝ2 →L[ℝ] ℝ) (hu : has_fderiv_at u l x) :
+(λ (h :ℝ), max 0 (max ((u x - u (x - h • e)) ) ((u x - u (x + h • e) ))) - |h *(l e)|  )
+ =o[𝓝 0] λ (h : ℝ), h :=
+ begin
+sorry,
+ end
 
 
 
