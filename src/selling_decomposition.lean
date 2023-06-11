@@ -230,7 +230,7 @@ lemma add_mul_row (v : matrix (fin 3) (fin 2) R) (D : matrix (fin 2) (fin d) R) 
 
 
 
-lemma E_D_superbase (v : matrix (fin 3) (fin 2) R) (D : matrix (fin 2) (fin 2) R) (he : is_superbase v) :
+lemma E_D_superbase (v : matrix (fin 3) (fin 2) R) (D : matrix (fin 2) (fin 2) R) (he : is_direct_superbase v) :
   E_D (![- v 0, v 1, v 0 - v 1]) (D) = E_D(v) (D) - 4 * (transpose (matrix.col (v 0))).mul(D.mul (matrix.col (v 1))) :=
   begin
     unfold E_D,
@@ -582,39 +582,120 @@ lemma associated_vectors_def (i j k : fin (3)) (hij : i < j)(vsb : is_direct_sup
  zero_sub,
  matrix.cons_val_one,
  matrix.cons_val_zero],
-  }
-
-
-
-  
-
-  /- norm_num,
-  rw exercise_part_one (v) (vsb),
+ unfold is_direct_superbase at vsb,
+ rw det_fin_two at vsb,
+ simp only [fin.succ_zero_eq_one', id.def, matrix.submatrix_apply, fin.succ_one_eq_two'] at vsb,
+ ring_nf,
+ linarith,
+ simp only [tsub_zero,
+ matrix.head_cons,
+ neg_mul,
+ matrix.vec2_dot_product,
+ third_element_0_2,
+ matrix.cons_val_one,
+ matrix.cons_val_zero],
+ have p : k=1,
+  by_contra,
+  fin_cases k,
+  simp only [eq_self_iff_true, not_true] at h_2, 
+  apply h_2,
+  simp only [eq_self_iff_true, not_true] at h,
+  apply h,
+  simp only [eq_self_iff_true, not_true] at h_3,
+  apply h_3,
+  rw p,
+  ring,
+  },
+  {
+  unfold kronecker_delta,
+  unfold associated_vectors_direct,
+  split_ifs,
+  exfalso,
+  norm_num at h,
+  exfalso,
+  norm_num at h,
+  exfalso,
+  norm_num at h,
+  exfalso,
+  norm_num at h,
+  exfalso,
+  rw ← h_2 at h_3,
+  norm_num at h_3,
+  rw ← h_2, 
+  simp only [tsub_zero,
+ matrix.head_cons,
+ neg_mul,
+ matrix.vec2_dot_product,
+ third_element_1_2,
+ matrix.cons_val_one,
+ matrix.cons_val_zero],
+ rw exercise_part_one (v) (vsb),
   unfold is_direct_superbase at vsb,
   rw det_fin_two at vsb,
   simp only [fin.succ_zero_eq_one', id.def, matrix.submatrix_apply, fin.succ_one_eq_two'] at vsb,
   simp only [pi.neg_apply, pi.sub_apply],
-  linarith,},
-  {
-  unfold kronecker_delta,
-  unfold associated_vectors_direct,
-  norm_num,
-  rw exercise_part_one_var (v) (vsb) at vsb,
+  linarith,
+  rw ← h_3,
+    simp only [matrix.head_cons,
+ neg_mul,
+ matrix.vec2_dot_product,
+ zero_sub,
+ third_element_1_2,
+ matrix.cons_val_one,
+ matrix.cons_val_zero],
+ rw exercise_part_one (v) (vsb),
   unfold is_direct_superbase at vsb,
   rw det_fin_two at vsb,
   simp only [fin.succ_zero_eq_one', id.def, matrix.submatrix_apply, fin.succ_one_eq_two'] at vsb,
-  ring_nf,
-  linarith,},
-  {
-  unfold kronecker_delta,
-  unfold associated_vectors_direct,
-  norm_num,
-  rw exercise_part_one_var (v) (vsb),
-  unfold is_direct_superbase at vsb,
-  rw det_fin_two at vsb,
-  simp only [fin.succ_zero_eq_one', id.def, matrix.submatrix_apply, fin.succ_one_eq_two'] at vsb,
-  ring_nf,},
-  fin_cases k, -/
+  simp only [pi.neg_apply, pi.sub_apply],
+  linarith,
+  have p : k=0,
+  by_contra,
+  fin_cases k,
+  simp only [eq_self_iff_true, not_true] at h, 
+  apply h,
+  simp only [eq_self_iff_true, not_true] at h_2,
+  apply h_2,
+  simp only [eq_self_iff_true, not_true] at h_3,
+  apply h_3,
+  rw p,
+  simp only [tsub_zero,
+ matrix.head_cons,
+ neg_mul,
+ matrix.vec2_dot_product,
+ third_element_1_2,
+ matrix.cons_val_one,
+ matrix.cons_val_zero],
+  linarith,
+  exfalso,
+  rw ← h_2 at h_3,
+  norm_num at h_3,
+  simp only [tsub_zero,
+ matrix.head_cons,
+ neg_mul,
+ matrix.vec2_dot_product,
+ third_element_1_2,
+ matrix.cons_val_one,
+ matrix.cons_val_zero],
+ rw ← h_2,
+ rw exercise_part_one v vsb,
+ simp only [pi.neg_apply, pi.sub_apply],
+ unfold is_direct_superbase at vsb,
+ rw det_fin_two at vsb,
+ simp only [fin.succ_zero_eq_one', id.def, matrix.submatrix_apply, fin.succ_one_eq_two'] at vsb,
+ exfalso,
+ norm_num at h_1,
+ rw ← h_3,
+ simp,
+ rw exercise_part_one v vsb,
+ unfold is_direct_superbase at vsb,
+ rw det_fin_two at vsb,
+ simp only [fin.succ_zero_eq_one', id.def, matrix.submatrix_apply, fin.succ_one_eq_two'] at vsb,
+ exfalso,
+ norm_num at vsb,
+ exfalso,
+ norm_num at h_1,
+  },
   end
 
 lemma associated_vectors_def (i j k : fin (3)) (hij : i < j)(vsb : is_superbase v) :
@@ -744,13 +825,14 @@ begin
   refl,
 end 
 
-lemma double_sum  (f : matrix (fin (3)) (fin 3) R) : ∑ i, ∑ j in Ioi i, f i j = f 0 1 + f 0 2 + f 1 2 :=
+@[simp]lemma double_sum  (f : matrix (fin (3)) (fin 3) R) : ∑ i, ∑ j in Ioi i, f i j = f 0 1 + f 0 2 + f 1 2 :=
 begin
 
   repeat { rw fin.Ioi_eq_finset_subtype},
   rw sum_fin_three,
   simp,
 end
+@[simp]
 
 lemma selling_formula (vsb : is_direct_superbase v) (Dsymm : D.is_symm) :
   D = - ∑ i, ∑ j in Ioi i, (v i ⬝ᵥ D.mul_vec (v j)) • vec_mul_vec (e i j vsb) (e i j vsb) :=
@@ -759,11 +841,21 @@ begin
   have h :  ∀ k l : nat, v k ⬝ᵥ (- ∑ i, ∑ j in Ioi i, (v i ⬝ᵥ D.mul_vec (v j)) • vec_mul_vec (e i j vsb) (e i j vsb) ).mul_vec (v l) = v k ⬝ᵥ D.mul_vec (v l),
   intros k l,
   by_cases h2 : k < l ∧ l ≤ 2,
-  norm_num,
+  by_cases h3 : k = 0 ∧ l = 1,
+  rw h3.1,
+  rw h3.2,
+  have p : ∑ (i : fin 3), ∑ (j : fin 3) in Ioi i, (v i ⬝ᵥ D.mul_vec (v j)) • vec_mul_vec (associated_vectors_direct v i j vsb) (associated_vectors_direct v i j vsb) = 
+  rw dot_product,
+  repeat { rw fin.Ioi_eq_finset_subtype},
+  rw sum_fin_three,
+  simp,
+  repeat { rw fin.Ioi_eq_finset_subtype},
+  rw double_sum,
   rw sum_fin_two,
   rw finset.sum,
   apply associated_vectors_def (2),
-  
+  sorry
+    
 
 
 
@@ -771,6 +863,20 @@ begin
 
 
 end
+
+lemma simp_dot_product (vsb : is_direct_superbase v) (k i j l : fin (3)): 
+  v k ⬝ᵥ ((vec_mul_vec (e i j vsb) (e i j vsb) ).mul_vec (v l)) =( v k ⬝ᵥ e i j vsb) * (e i j vsb ⬝ᵥ v l) :=
+  begin
+  simp,
+  ring_nf,
+  rw vec_mul_vec_eq,
+  rw mul_vec,
+  ring_nf,
+  simp,
+
+
+
+  end
 
 
 end Z_or_R
