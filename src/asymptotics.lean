@@ -213,12 +213,21 @@ local notation `ℝ2` := (fin 2) → ℝ
  def upwind_fd (u : ℝ2 → ℝ) (x v:ℝ2) :=
 max (0:ℝ) (max ((u x - u (x - v)) ) ((u x - u (x + v) )))
 
+def j (u : ℝ2 → ℝ) (x e:ℝ2) (t: ℝ):= u(x+t•e)
+
+
 -- TODO : replace du : ℝ2 →L[ℝ] ℝ with gradu : ℝ2
 example (u : ℝ2 → ℝ) (x e : ℝ2) (du : ℝ2 →L[ℝ] ℝ) (hu : has_fderiv_at u du x) :
 (λ (h :ℝ), upwind_fd u x (h•e) - |h *(du e)|  )
  =o[𝓝 0] λ (h : ℝ), h :=
 begin
-sorry,
+
+let v : ℝ → ℝ2 := λ t:ℝ,  x+t•e,
+let dv : ℝ → L[ℝ] ℝ2 := λ t:ℝ,  (λ y: ℝ2 , e),
+
+have hv := has_fderiv_at v dv 0,
+
+
 end
 
 
