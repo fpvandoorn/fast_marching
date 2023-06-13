@@ -1,4 +1,7 @@
 import analysis.calculus.cont_diff
+import linear_algebra.matrix.pos_def
+open_locale big_operators matrix
+noncomputable theory 
 
 open filter asymptotics
 open_locale topology
@@ -99,53 +102,13 @@ theorems in mathlib, and to prove a variant of `has_deriv_at_iff_is_o` that is c
 
 /- This is false: fix the statement and then prove it with `lipschitz_with_max`,
   `lipschitz_with_iff_dist_le_mul`, `prod.dist_eq`, `real.dist_eq` -/
-lemma max_1_lip (a b c d :ℝ ) : |(max a b)-(max c d)|≤ max (|a-c|) (|b-d|) :=
+lemma max_1_lip (a b c d :ℝ ) : |(max 0 (max a b))-(max 0 (max c d))|≤ max (|a-c|) (|b-d|) :=
 begin
--- exact match dans librarie
-exact abs_max_sub_max_le_max a b c d,
-
--- Question : how to go from edist (used in Lipschitz_max) to dist ?
-repeat{rw ← real.dist_eq},
-let k := lipschitz_with_max,
-unfold lipschitz_with at k,
-
-simp at k,
-unfold edist at k,
-rw real.dist_eq at k,
-unfold pseudo_metric_space.edist at k,
- 
--- rw ← prod.dist_eq [abs] [abs],
-
-
-
-by_cases ha: (a<b),
-by_cases hb: (c<d),
-rw max_eq_right,
-rw max_eq_right,
-rw le_max_iff,
-right,
-simp,
-rw lt_iff_le_and_ne at hb,
-exact hb.1,
-rw lt_iff_le_and_ne at ha,
-exact ha.1,
-
-rw max_eq_right,
-let hc:= not_lt.1 hb,
-rw max_eq_left,
-rw le_max_iff,
-left,
-simp, -- this is not provable, what if a = c = 0, b = 1?
--- I gave some hints of useful lemmas in mathlib above the lemma statement. Use those.
--- Or alternatively prove this lemma (carefully!) on paper first, and then try to repeat that
--- proof in Lean. Feel free to delete comments like these in your next submission.
-
-repeat{rw abs_eq_max_neg},
-rw max_eq_left ,
-rw max_eq_right,
-simp,
-linarith,
-
+rw max_comm,
+rw max_comm 0 (max c d),
+let h1 := abs_max_sub_max_le_abs (max a b) (max c d) 0,
+let h2 := abs_max_sub_max_le_max a b c d,
+exact le_trans h1 h2,
 
 end
 
@@ -197,17 +160,50 @@ lemma max_0_u (u : ℝ → ℝ) (x u': ℝ) (hu : has_deriv_at u u' x) :
   (λ h,  max 0 (max ((u x - u (x - h)) ) ((u x - u (x + h) ))) - |h  *u'|)
   =o[𝓝 0] λ h, h :=
 begin
-  have h : (λ (h : ℝ), (max ((u x - u (x - h))) (u x - u (x + h)))- |h*u'|  ) =o[𝓝 0] λ (h : ℝ),h,
-  {
-    apply max_o u x u' hu,},
-
-  have ho : (λ (ho : ℝ), (0:ℝ) ) =o[𝓝 0] λ (ho : ℝ), ho ,
-  {simp, },  
-  let k:= is_o.max ho h,
-  simp at k,
-  exact k,
-  sorry,
+rw is_o_iff,
+  intros c hc,
+  rw eventually_nhds_iff,  
+let h1 := (my_lemma u u' x).1 hu,
+rw is_o_iff at h1,
+specialize h1 hc,
+rw eventually_nhds_iff at h1,
+rcases h1 with ⟨V,  ⟨H, V_open, V0⟩⟩,
+let W:= V ∩ -V,
+use W,
+split,
+{intros h Wh,
+  rw abs_eq_max_neg,
+  repeat{rw real.norm_eq_abs},
+  let max_diff := max_1_lip (u x - u (x - h))  (u x - u (x + h)) (h*u') (-(h * u')) ,
+  rw ← abs_eq_max_neg at max_diff,
+  let P:= abs_nonneg (h * u'),
+  rw max_eq_right P at max_diff,
+  rw abs_eq_max_neg at max_diff,
+  rw abs_eq_max_neg at max_diff,
+  rw ← abs_eq_max_neg at max_diff,
+  let diffp := H h Wh.1,
+  repeat{rw real.norm_eq_abs at diffp},
+  let diffm := H (-h) Wh.2,
+  repeat{rw real.norm_eq_abs at diffm},
+  rw abs_neg at diffm,
+  rw ← abs_neg at diffm,
+  rw ← abs_neg at diffp,
+  let F := max_le diffp diffm,
+  rw max_comm at F,
+  apply le_trans max_diff _,
+  apply le_trans _ F,
+  simp only [← sub_eq_add_neg],
+  apply le_of_eq,
+  congr' 2; ring },
+split,
+{
+  have V_neg_open := V_open.neg,
+  apply is_open.inter V_open V_neg_open,},
+{simp,
+exact V0,},
 end
+
+
 
 open finset matrix
 local notation `ℝ2` := (fin 2) → ℝ 
@@ -230,14 +226,14 @@ variables (μ : fin 3 → ℝ) (e : (fin 3) → ℝ2) (D : matrix (fin 2) (fin 2
 variables (Dsymm : D.is_symm)
 
 -- TODO : how to write that D admits this decomposition ?
-example : D = ∑ i in (fin 3), μ i • vec_mul_vec (e i) (e i) :=sorry
+example : D = ∑ i , μ i • vec_mul_vec (e i) (e i) :=sorry
 variable (hD : D = ∑ i in (fin 3), μ i • vec_mul_vec (e i) (e i) )
 
 -- MAIN OBJECTIVE --
-example (u:ℝ2 → ℝ) (x : ℝ2) (du : ℝ2 →L[ℝ] ℝ) (hu : has_fderiv_at u du x)
-λ h, ∑ i in fin 3, μ i * (upwind_fd u x (h•e i))^2 - h^2 * du ⬝ᵥ D.mul_vec du 
-=o[𝓝 0] λ h,h^2
-:= sorry
+example (u:ℝ2 → ℝ) (x : ℝ2) (du : ℝ2) (hu: differentiable_at ℝ u x ):
+(λ h, (∑ i, μ i * (upwind_fd u x (h•e i))^2) - h^2 * du ⬝ᵥ D.mul_vec du)
+=o[𝓝 (0 : ℝ)] λ h, h^2
+:= sorry 
 
 
 example (u : ℝ2 → ℝ) (x e : ℝ2) (l:ℝ2 →L[ℝ] ℝ) (hu : has_fderiv_at u l x) :
