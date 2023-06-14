@@ -973,10 +973,10 @@ ext,simp,
 end
 
 
-example {K : ℝ} : set.finite { v : ℝ | v ∈ Z ∧ |v| ≤ K } :=
+lemma int_fin {K : ℝ} : set.finite { v : ℝ | v ∈ Z ∧ |v| ≤ K } :=
 begin
   rw ← int_symm,
-  
+  exact (coe '' set.Icc (-⌊K⌋) ⌊K⌋).to_finite,
 end
 
 
@@ -984,15 +984,24 @@ end
 Preliminary exercise: {v in R^2 | forall i, v i in Z and |v i| <= K} 
 is a nonempty finite set, for any K>=0.
 --/
-example {K : ℝ} : set.finite { v : fin 2 → ℝ | ∀ i, v i ∈ Z ∧ |v i| ≤ K } :=
-sorry 
 
-example {K : ℝ} : (set.univ).pi (λ i : fin 2, { v : ℝ | v ∈ Z ∧ |v| ≤ K }) = 
+lemma vec_symm {K : ℝ} : (set.univ).pi (λ i : fin 2, { v : ℝ | v ∈ Z ∧ |v| ≤ K }) = 
   { v : fin 2 → ℝ | ∀ i, v i ∈ Z ∧ |v i| ≤ K } :=
 begin
   ext,
   simp,
 end
+
+example {K : ℝ} : set.finite { v : fin 2 → ℝ | ∀ i, v i ∈ Z ∧ |v i| ≤ K } :=
+begin
+  rw ← vec_symm,
+  refine set.finite.pi _,
+  intro v,
+  apply int_fin,
+
+end
+
+
 
 example (v₀ : fin 2 → ℝ) : ∃ v : fin 2 → ℤ, ∀ v' : fin 2 → ℤ,  
   ‖ coeZR ∘ v - v₀ ‖ ≤ ‖ coeZR ∘ v' - v₀ ‖ :=
