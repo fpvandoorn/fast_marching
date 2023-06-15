@@ -1006,7 +1006,8 @@ end
 example (v₀ : fin 2 → ℝ) : ∃ v : fin 2 → ℤ, ∀ v' : fin 2 → ℤ,  
   ‖ coeZR ∘ v - v₀ ‖ ≤ ‖ coeZR ∘ v' - v₀ ‖ :=
 begin
-
+  refine set.nonempty_def.mp _,
+  exact exists_true_iff_nonempty,
 end 
 /--
 Exercise : forall v0 : R^2 there exists v : Z^2 which minimizes |v-v0|
