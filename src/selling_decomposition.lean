@@ -122,6 +122,22 @@ lemma exercise_part_one (e : matrix (fin 3) (fin 2) R) (he : is_direct_superbase
     refl,rw m,simp,rw add_assoc,},
     rw h2 at h,
     rw [← sub_zero (e 2), ← h],
+    ring
+  end
+
+
+lemma exercise_part_one_v (e : matrix (fin 3) (fin 2) R) (he : is_superbase e) :
+  e 0 = - e 1 - e 2 :=
+
+  begin
+    have h:=he.1,
+    simp at h,
+    have h2 : univ.sum e = e 0 + e 1 + e 2,
+    {rw fin.sum_univ_def,simp[sum_range_succ],
+    have m: list.fin_range 3 = [0,1,2],
+    refl,rw m,simp,rw add_assoc,},
+    rw h2 at h,
+    rw [← sub_zero (e 2), ← h],
     ring,
     rw function.funext_iff at h,
     simp at h,
@@ -227,16 +243,15 @@ lemma add_mul_row (v : matrix (fin 3) (fin 2) R) (D : matrix (fin 2) (fin d) R) 
   end
 
 
+/-- essai non nécessaire pour la suite car nous avons trouvé un meilleur moyen-/
 
-
-
-lemma E_D_superbase (v : matrix (fin 3) (fin 2) R) (D : matrix (fin 2) (fin 2) R) (he : is_direct_superbase v) :
+lemma E_D_superbase (v : matrix (fin 3) (fin 2) R) (D : matrix (fin 2) (fin 2) R) (he : is_superbase v) :
   E_D (![- v 0, v 1, v 0 - v 1]) (D) = E_D(v) (D) - 4 * (transpose (matrix.col (v 0))).mul(D.mul (matrix.col (v 1))) :=
   begin
     unfold E_D,
     ring_nf,
     unfold norm_D,
-    rw exercise_part_one (v) (he),
+    rw exercise_part_one_v (v) (he),
     --have g := (col (![-(-v 1 - v 2), v 1, -v 1 - v 2 - v 1] x))ᵀ ⬝ (D ⬝ col (![-(-v 1 - v 2), v 1, -v 1 - v 2 - v 1] x)),
     have h2 : univ.sum v = v 0 + v 1 + v 2,
     {rw fin.sum_univ_def,simp[sum_range_succ],
@@ -262,7 +277,8 @@ lemma E_D_superbase (v : matrix (fin 3) (fin 2) R) (D : matrix (fin 2) (fin 2) R
     {repeat {apply mul_add_col,},}
 
 
-  end 
+  end
+
 
 /-- second try with vectors-/
 
@@ -285,7 +301,7 @@ def norm_D_vec (v : fin d → R) (D : matrix (fin d) (fin d) R) := v ⬝ᵥ mul_
 def E_D_vec (v : matrix (fin (d+1)) (fin d) R) (D : matrix (fin d) (fin d) R) := ∑ i , norm_D_vec (v i) (D)
 #check finset.min 
 #check finset.min'
-
+local notation `Z` := set.range (coe : ℤ → ℝ)
 /--
 Exercise : forall v0 : R^2 there exists v : Z^2 which minimizes |v-v0|
 Desired proof : 
@@ -294,7 +310,12 @@ There are a finite number of them, so one is minimal.
 --/
 example (v₀ : fin 3 → ℝ) : ∃ v : fin 3 → ℝ, (∀ i, v i ∈ Z) ∧ ∀ v' : fin 3 → ℝ, (∀ i, v' i ∈ Z) →  
   ‖ v - v₀ ‖ ≤ ‖ v' - v₀ ‖ :=
-sorry 
+begin
+
+
+
+
+end
 
 lemma E_D_superbase_vec (v : matrix (fin 3) (fin 2) R) (D : matrix (fin 2) (fin 2) R) (he : is_superbase v) (hd : D.is_symm):
   E_D_vec (![- v 0, v 1, v 0 - v 1]) (D) = E_D_vec(v) (D) - 4 * v 0 ⬝ᵥ mul_vec D (v 1 ):=
@@ -894,10 +915,10 @@ Note that the current statement doesn't encode the precise algorithm used. To do
 should just define a sequence of matrices (separately for `d = 2` and `d = 3`)
 and show that we reach one that satisfies the obtuseness.
 -/
-theorem selling_algorithm (vsb : is_superbase v) (vint : ∀ i j, v i j ∈ Z)
+theorem selling_algorithm (vsb : is_direct_superbase v) (vint : ∀ i j, v i j ∈ Z)
   (Dsymm : D.is_symm) (Dposdef : D.pos_def) (hd : d = 2 ∨ d = 3) :
   ∃ v' : matrix (fin (d+1)) (fin d) ℝ,
-    is_superbase v' ∧ is_obtuse v' D ∧ ∀ i j, v' i j ∈ Z :=
+    is_direct_superbase v' ∧ is_obtuse v' D ∧ ∀ i j, v' i j ∈ Z :=
 sorry
 
 example (a b : ℤ) : set.finite (set.Icc a b) := set.finite_Icc a b
@@ -906,33 +927,87 @@ example (a b : ℤ) : set.finite (set.Icc a b) := set.finite_Icc a b
 local notation `coeZR` := (coe : ℤ → ℝ)
 
 #check int.floor 
-example {K : ℝ} : coeZR '' (set.Icc (-int.floor K) (int.floor K)) = { v : ℝ | v ∈ Z ∧ |v| ≤ K } :=
+lemma int_symm {K : ℝ} : coeZR '' (set.Icc (-int.floor K) (int.floor K)) = { v : ℝ | v ∈ Z ∧ |v| ≤ K } :=
+begin
+ext,simp, rw abs_le,
+split,
+intro p,
+split,
+cases p with l hl,
+use l,
+apply hl.2,
+split,
+cases p with l hl,
+rw ← neg_neg x,
+apply neg_le_neg,
+rw ← hl.2,
+rw ← neg_neg K,
+apply neg_le_neg,
+rw int.ceil_le.symm,
+rw int.ceil_neg,
+apply hl.1.1,
+cases p with l hl,
+rw ← hl.2,
+rw int.le_floor.symm,
+apply hl.1.2,
+intro p,
+cases p with l hl,
+cases l with y hy,
+use y,
+split,
+split,
+rw ← int.ceil_neg,
+rw int.ceil_le,
+rw hy,
+apply hl.1,
+rw int.le_floor,
+rw hy,
+apply hl.2,
+apply hy,
+end
+
+
+example {K : ℝ} : Z '' (set.Icc (-int.floor K) (int.floor K)) = { v : ℝ | v ∈ Z ∧ |v| ≤ K } :=
 begin
 ext,simp,
 end
 
-example {K : ℝ} : set.finite { v : ℝ | v ∈ Z ∧ |v| ≤ K } :=
-sorry 
+
+lemma int_fin {K : ℝ} : set.finite { v : ℝ | v ∈ Z ∧ |v| ≤ K } :=
+begin
+  rw ← int_symm,
+  exact (coe '' set.Icc (-⌊K⌋) ⌊K⌋).to_finite,
+end
 
 
 /--
 Preliminary exercise: {v in R^2 | forall i, v i in Z and |v i| <= K} 
 is a nonempty finite set, for any K>=0.
 --/
-example {K : ℝ} : set.finite { v : fin 2 → ℝ | ∀ i, v i ∈ Z ∧ |v i| ≤ K } :=
-sorry 
 
-example {K : ℝ} : (set.univ).pi (λ i : fin 2, { v : ℝ | v ∈ Z ∧ |v| ≤ K }) = 
+lemma vec_symm {K : ℝ} : (set.univ).pi (λ i : fin 2, { v : ℝ | v ∈ Z ∧ |v| ≤ K }) = 
   { v : fin 2 → ℝ | ∀ i, v i ∈ Z ∧ |v i| ≤ K } :=
 begin
   ext,
   simp,
 end
 
+example {K : ℝ} : set.finite { v : fin 2 → ℝ | ∀ i, v i ∈ Z ∧ |v i| ≤ K } :=
+begin
+  rw ← vec_symm,
+  refine set.finite.pi _,
+  intro v,
+  apply int_fin,
+
+end
+
+
+
 example (v₀ : fin 2 → ℝ) : ∃ v : fin 2 → ℤ, ∀ v' : fin 2 → ℤ,  
   ‖ coeZR ∘ v - v₀ ‖ ≤ ‖ coeZR ∘ v' - v₀ ‖ :=
 begin
-
+  refine set.nonempty_def.mp _,
+  exact exists_true_iff_nonempty,
 end 
 /--
 Exercise : forall v0 : R^2 there exists v : Z^2 which minimizes |v-v0|
