@@ -1,0 +1,27 @@
+
+\documentclass{standalone}
+
+\usepackage[compat=1.1.0]{tikz-feynman}
+
+
+\def\plusheight{-\the\dimexpr\fontdimen22\textfont2\relax}
+
+\begin{document}
+
+    \feynmandiagram[layered layout, horizontal=b to c,baseline=\plusheight]{
+    a [particle={\(\mu,a\)}] -- [ gluon, momentum=\(p\)] b[dot]
+      -- [gluon, half left, momentum={\(l=p+q,d\)}] c[dot][particle=\(\beta\alpha\lambda\)]
+      -- [gluon, half left, reversed momentum={\(q,c\)}] b,
+    c -- [gluon, momentum={\(s=p\)}] e[particle={\(\nu,b\)}],
+    };
+      +
+
+    \feynmandiagram [horizontal=a to b, layered layout,baseline=\plusheight] {
+      a[particle=\(\mu\)] --[gluon,momentum'=\(p\)] b [dot] -- [gluon,out=135, in=45, loop, min distance=3cm,momentum=\(l\)] b --[gluon,momentum'=\(p\)] c[particle=\(\nu\)],
+    };
+
+
+
+
+
+\end{document}

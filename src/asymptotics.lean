@@ -102,14 +102,16 @@ theorems in mathlib, and to prove a variant of `has_deriv_at_iff_is_o` that is c
 
 /- This is false: fix the statement and then prove it with `lipschitz_with_max`,
   `lipschitz_with_iff_dist_le_mul`, `prod.dist_eq`, `real.dist_eq` -/
+
+
 lemma max_1_lip (a b c d :ℝ ) : |(max 0 (max a b))-(max 0 (max c d))|≤ max (|a-c|) (|b-d|) :=
 begin
-rw max_comm,
-rw max_comm 0 (max c d),
+
 let h1 := abs_max_sub_max_le_abs (max a b) (max c d) 0,
 let h2 := abs_max_sub_max_le_max a b c d,
+rw max_comm,
+rw max_comm 0 (max c d),
 exact le_trans h1 h2,
-
 end
 
 #check max_1_lip
@@ -216,6 +218,8 @@ max (0:ℝ) (max ((u x - u (x - v)) ) ((u x - u (x + v) )))
 def j (u : ℝ2 → ℝ) (x e:ℝ2) (t: ℝ):= u(x+t•e)
 
 
+
+
 -- TODO : replace du : ℝ2 →L[ℝ] ℝ with gradu : ℝ2
 example (u : ℝ2 → ℝ) (x e : ℝ2) (du : ℝ2 →L[ℝ] ℝ) (hu : has_fderiv_at u du x) :
 (λ (h :ℝ), upwind_fd u x (h•e) - |h *(du e)|  )
@@ -223,11 +227,27 @@ example (u : ℝ2 → ℝ) (x e : ℝ2) (du : ℝ2 →L[ℝ] ℝ) (hu : has_fder
 begin
 
 let v : ℝ → ℝ2 := λ t:ℝ,  x+t•e,
-let dv : ℝ → L[ℝ] ℝ2 := λ t:ℝ,  (λ y: ℝ2 , e),
+--let idℝℝ := continuous_linear_map.id ℝ ℝ,
+--let dv := idℝℝ.smul_right e,
 
-have hv := has_fderiv_at v dv 0,
+have hv : has_deriv_at v e 0,
+{
+  unfold has_deriv_at,
+  unfold has_deriv_at_filter,
+  unfold has_fderiv_at_filter,
+  simp,
+},
+have hubis : has_fderiv_at u du (v 0), {
+simp [v],simp,exact hu,
+},
+let k1:= has_fderiv_at.comp_has_deriv_at 0 hubis hv,
 
-
+--let k:=has_fderiv_at.comp (0:ℝ) hubis hv,
+let h:= max_0_u (u.comp v) 0 (du e) k1,
+simp only [v, function.comp_app, zero_smul, add_zero, zero_sub, neg_smul, zero_add] at h,
+simp_rw ← sub_eq_add_neg at h,
+unfold upwind_fd,
+exact h,
 end
 
 
