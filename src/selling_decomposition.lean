@@ -77,54 +77,100 @@ end
 
 /- Lemma: if `(e₀, e₁, e₂)` is a superbase, then so is `(- e₀, e₁, e₀ - e₁)`. -/
 
-lemma exercise (e : matrix (fin 3) (fin 2) R) (he : is_direct_superbase e) :
-  is_direct_superbase ![e 1, - e 0, e 0 - e 1] :=
-  begin
-  sorry
-  end
 
+
+#check @function.funext_iff
+
+/-- Lemme intermédiaire : si $(e₀, e₁, e₂)$ est une superbase, alors $e_0 = - e_1 - e_2$ -/
+
+lemma exercise_part_one_v (e : matrix (fin 3) (fin 2) R) (he : is_superbase e) :
+  e 0 = - e 1 - e 2 :=
+  begin
+    -- Nous devons utiliser la première propriété de l'hypothèse : e est une superbase.
+    have h:=he.1,
+    -- Nous devons expliciter la somme 
+    simp at h,
+    -- simp est une tactique permettant de réécrire autrement l'hypothèse h et essayant de la simplifier
+    have h2 : univ.sum e = e 0 + e 1 + e 2,
+    -- nous voulons montrer le lemme h_2 : la somme sur trois éléments s'écrit explicitement comme ceci.
+    -- Il nous faut pour cela réécrire la définition de univ.sum dans le cas d'une somme finie
+    -- les crochets permettent d'isoler la démonstration du lemme h_2, pour plus de clarté
+    {rw fin.sum_univ_def,simp[sum_range_succ],
+    -- nous voulons expliciter les indices 0, 1 et 2, il nous faut donc montrer un autre lemme : 
+    have m: list.fin_range 3 = [0,1,2],
+    refl,
+    --fin de la démonstration de m 
+    --(la tactique refl permet de terminer une preuve si de chaque côté de l'égalité, les expressions sont égales par définition)
+    rw m,simp,rw add_assoc,},
+    rw h2 at h,
+    -- permet de réutiliser la démonstration que nous venons de faire
+    rw [← sub_zero (e 2),
+    -- astuce afin de réécrire h : il suffit d'insérer un 0 puis de le réécrire en fonction de h
+     ← h],
+    ring
+    -- ring est une tactique permettant de simplifier toute expression sur un anneau 
+  end
 
 lemma exercise (e : matrix (fin 3) (fin 2) R) (he : is_superbase e) :
   is_superbase ![- e 0, e 1, e 0 - e 1] :=
 begin
   simp only [is_superbase],
+  -- permet d'expliciter ce que nous voulons montrer 
   split,
+  -- comme il y a deux propriétés à montrer, nous nous attardons d'abord sur le fait que la somme des vecteurs est nulle,
+  -- puis que ... 
   {simp},
   have h: e 0 - e 1 = -2 * e 1 - e 2,
+  -- $ \det(e_1, e_0 - e_1) = \det (e_1, -2* e_1 - e_2) $ puis il suffira de simplifier le déterminant.
   {begin
-    sorry
+    rw exercise_part_one_v e he,
+    ring,
   end},
 rw det_fin_two,
+-- afin de simplifier le déterminant nous utilisons l'expression explicite du déterminant 2x2.
 rw h,
 simp,
 unfold is_superbase at he,
+-- permet d'expliciter l'hypothèse afin de se retrouver avec la même expression que ce que nous voulons montrer 
 rw det_fin_two at he,
 simp at he,
 rw ← he.2,
 ring_nf,
 rw abs_eq_abs,
+-- nous devons faire attention aux valeurs absolues et choisir la bonne expression
 right,
 ring,
 end
 
 
-#check @function.funext_iff
 
 lemma exercise_part_one (e : matrix (fin 3) (fin 2) R) (he : is_direct_superbase e) :
   e 0 = - e 1 - e 2 :=
-
   begin
+    -- Nous devons utiliser la première propriété de l'hypothèse : e est une superbase directe.
     have h:=he.1,
+    -- Nous devons expliciter la somme 
     simp at h,
+    -- simp est une tactique permettant de réécrire autrement l'hypothèse h et essayant de la simplifier
     have h2 : univ.sum e = e 0 + e 1 + e 2,
+    -- nous voulons montrer le lemme h_2 : la somme sur trois éléments s'écrit explicitement comme ceci.
+    -- Il nous faut pour cela réécrire la définition de univ.sum dans le cas d'une somme finie
+    -- les crochets permettent d'isoler la démonstration du lemme h_2, pour plus de clarté
     {rw fin.sum_univ_def,simp[sum_range_succ],
+    -- nous voulons expliciter les indices 0, 1 et 2, il nous faut donc montrer un autre lemme : 
     have m: list.fin_range 3 = [0,1,2],
-    refl,rw m,simp,rw add_assoc,},
+    refl,
+    --fin de la démonstration de m 
+    --(la tactique refl permet de terminer une preuve si de chaque côté de l'égalité, les expressions sont égales par définition)
+    rw m,simp,rw add_assoc,},
     rw h2 at h,
-    rw [← sub_zero (e 2), ← h],
+    -- permet de réutiliser la démonstration que nous venons de faire
+    rw [← sub_zero (e 2),
+    -- astuce afin de réécrire h : il suffit d'insérer un 0 puis de le réécrire en fonction de h
+     ← h],
     ring
+    -- ring est une tactique permettant de simplifier toute expression sur un anneau 
   end
-
 
 lemma exercise_part_one_v (e : matrix (fin 3) (fin 2) R) (he : is_superbase e) :
   e 0 = - e 1 - e 2 :=
@@ -719,7 +765,7 @@ lemma associated_vectors_def (i j k : fin (3)) (hij : i < j)(vsb : is_direct_sup
   },
   end
 
-lemma associated_vectors_def (i j k : fin (3)) (hij : i < j)(vsb : is_superbase v) :
+@[simp]lemma associated_vectors_def (i j k : fin (3)) (hij : i < j)(vsb : is_superbase v) :
   e i j vsb ⬝ᵥ v k = kronecker_delta R i k - kronecker_delta R j k :=
   begin
   fin_cases i;
@@ -853,18 +899,22 @@ begin
   rw sum_fin_three,
   simp,
 end
-@[simp]
+
 
 lemma selling_formula (vsb : is_direct_superbase v) (Dsymm : D.is_symm) :
   D = - ∑ i, ∑ j in Ioi i, (v i ⬝ᵥ D.mul_vec (v j)) • vec_mul_vec (e i j vsb) (e i j vsb) :=
 begin
   have B := - ∑ i, ∑ j in Ioi i, (v i ⬝ᵥ D.mul_vec (v j)) • vec_mul_vec (e i j vsb) (e i j vsb) ,
-  have h :  ∀ k l : nat, v k ⬝ᵥ (- ∑ i, ∑ j in Ioi i, (v i ⬝ᵥ D.mul_vec (v j)) • vec_mul_vec (e i j vsb) (e i j vsb) ).mul_vec (v l) = v k ⬝ᵥ D.mul_vec (v l),
+  have h :  ∀ k l, ( ∑ i, ∑ j in Ioi i, - v k ⬝ᵥ ((v i ⬝ᵥ D.mul_vec (v j)) • vec_mul_vec (e i j vsb) (e i j vsb) ).mul_vec (v l)) = v k ⬝ᵥ D.mul_vec (v l),
   intros k l,
   by_cases h2 : k < l ∧ l ≤ 2,
   by_cases h3 : k = 0 ∧ l = 1,
   rw h3.1,
   rw h3.2,
+  rw double_sum,
+  rw dot_product_smul 
+  (v 0 ⬝ᵥ D.mul_vec (v 1)) (v 0 vec_mul_vec (associated_vectors_direct v 0 1 vsb) (associated_vectors_direct v 0 1 vsb)),
+  simp,
   have p : ∑ (i : fin 3), ∑ (j : fin 3) in Ioi i, (v i ⬝ᵥ D.mul_vec (v j)) • vec_mul_vec (associated_vectors_direct v i j vsb) (associated_vectors_direct v i j vsb) = 
   rw dot_product,
   repeat { rw fin.Ioi_eq_finset_subtype},
@@ -966,6 +1016,45 @@ apply hl.2,
 apply hy,
 end
 
+lemma int_symm_coe {K : ℝ} : coeZR '' (set.Icc (-int.floor K) (int.floor K)) = { v : ℤ | |coeZR(v)| ≤ K } :=
+begin
+ext,simp, rw abs_le,
+split,
+intro p,
+split,
+cases p with l hl,
+use l,
+apply hl.2,
+split,
+cases p with l hl,
+rw ← neg_neg x,
+apply neg_le_neg,
+rw ← hl.2,
+rw ← neg_neg K,
+apply neg_le_neg,
+rw int.ceil_le.symm,
+rw int.ceil_neg,
+apply hl.1.1,
+cases p with l hl,
+rw ← hl.2,
+rw int.le_floor.symm,
+apply hl.1.2,
+intro p,
+cases p with l hl,
+cases l with y hy,
+use y,
+split,
+split,
+rw ← int.ceil_neg,
+rw int.ceil_le,
+rw hy,
+apply hl.1,
+rw int.le_floor,
+rw hy,
+apply hl.2,
+apply hy,
+end
+
 
 example {K : ℝ} : Z '' (set.Icc (-int.floor K) (int.floor K)) = { v : ℝ | v ∈ Z ∧ |v| ≤ K } :=
 begin
@@ -979,7 +1068,11 @@ begin
   exact (coe '' set.Icc (-⌊K⌋) ⌊K⌋).to_finite,
 end
 
-
+lemma int_fin_coe {K : ℝ} : set.finite { v : ℤ | |coeZR (v)| ≤ K } :=
+begin
+  rw ← int_symm_coe,
+  exact (coe '' set.Icc (-⌊K⌋) ⌊K⌋).to_finite,
+end
 /--
 Preliminary exercise: {v in R^2 | forall i, v i in Z and |v i| <= K} 
 is a nonempty finite set, for any K>=0.
@@ -992,7 +1085,14 @@ begin
   simp,
 end
 
-example {K : ℝ} : set.finite { v : fin 2 → ℝ | ∀ i, v i ∈ Z ∧ |v i| ≤ K } :=
+lemma vec_symm_coe {K : ℝ} : (set.univ).pi (λ i : fin 2, { v : ℤ  | |coeZR (v)| ≤ K }) = 
+  { v : fin 2 → ℤ  | ∀ i, |coeZR (v i)| ≤ K } :=
+begin
+  ext,
+  simp,
+end
+
+lemma born_fin {K : ℝ} : set.finite { v : fin 2 → ℝ | ∀ i, v i ∈ Z ∧ |v i| ≤ K } :=
 begin
   rw ← vec_symm,
   refine set.finite.pi _,
@@ -1001,13 +1101,67 @@ begin
 
 end
 
+lemma born_fin_coe (K : ℝ) : set.finite { v : fin 2 → ℤ | ∀ i, |coeZR (v i)| ≤ K } :=
+begin
+  rw ← vec_symm_coe,
+  refine set.finite.pi _,
+  intro v,
+  simp_rw abs_le,
+  simp_rw ← int.ceil_le,
+  simp_rw ← int.le_floor,
+  apply set.finite_Icc,
 
+end
 
 example (v₀ : fin 2 → ℝ) : ∃ v : fin 2 → ℤ, ∀ v' : fin 2 → ℤ,  
   ‖ coeZR ∘ v - v₀ ‖ ≤ ‖ coeZR ∘ v' - v₀ ‖ :=
 begin
-  refine set.nonempty_def.mp _,
-  exact exists_true_iff_nonempty,
+  have p :  ∃ w : fin 2 → ℤ, ‖ coeZR ∘ w - v₀ ‖ ≤ ‖ 0 - v₀ ‖,
+  {begin
+    use 0,
+    simp,
+  end},
+  let A:={ w : fin 2 → ℤ | ‖ coeZR ∘ w - v₀ ‖ ≤ ‖ 0 - v₀ ‖},
+  have h : set.finite A,
+  begin
+    apply set.finite.subset,
+    apply born_fin_coe (2*‖ 0 - v₀ ‖),
+    intro x,
+    intro h,
+    intro i,
+    simp at h,
+    simp_rw pi.norm_def,
+    simp_rw pi.norm_def at h,
+    calc |coeZR (x i)| ≤ |(- v₀ i)| + | (- v₀ i) + coeZR (x i )| :_ 
+    ... ≤ |coeZR (x i) - v₀ i| + |v₀ i| :_
+    ... ≤ ‖ 0 - v₀ ‖ + ‖ 0 - v₀ ‖ :_
+    ... ≤ 2 * (finset.univ.sup (λ (b : fin 2), ‖(0 - v₀) b‖₊) : nnreal) :_,
+    begin 
+    apply abs_add',
+    end,
+    begin
+    simp [sub_eq_add_neg,add_comm],
+    end,
+    begin
+    apply add_le_add,
+    simp at h,
+    end,
+  end,
+  let f:= fun w, ‖ coeZR ∘ w - v₀ ‖ ,
+  have min:=finset.exists_min_image h.to_finset f _,
+  rcases min with ⟨w, hw,hw2⟩,
+  use w,
+  intro v,
+  by_cases l : ‖ coeZR ∘ v - v₀ ‖ ≤ ‖ 0 - v₀ ‖,
+  apply hw2,
+  simp,
+  simp at l,
+  exact l,
+  simp at hw,
+  simp at l,
+  linarith,
+  use 0,
+  simp,
 end 
 /--
 Exercise : forall v0 : R^2 there exists v : Z^2 which minimizes |v-v0|
@@ -1022,4 +1176,6 @@ sorry
 #check @set.finite.pi 
 #check @set.finite.to_finset
 #check @set.pi 
+#check @finset.inf'
+#check @exists.elim
 end real

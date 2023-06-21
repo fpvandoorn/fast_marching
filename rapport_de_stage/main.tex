@@ -1,0 +1,649 @@
+
+\documentclass[12pt]{article}
+\usepackage[mathletters]{ucs}
+\usepackage[T1]{fontenc}
+\usepackage[utf8x]{inputenc}
+\usepackage{lmodern}
+
+\usepackage[subpreambles=true]{standalone}
+\usepackage{import}
+\usepackage{graphicx}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{tabularx}
+\usepackage{fancyhdr}
+\usepackage[french]{babel}
+% \usepackage[style=numeric]{biblatex}
+% \addbibresource{bib 3.bib}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{enumerate}
+
+\usepackage[notref]{showkeys} % Commenter avant d'imprimer ou d'envoyer le rapport
+
+\usepackage{bm}
+\usepackage{amssymb,amsmath,amsthm}
+\usepackage{braket}
+\usepackage{tikz}
+\usepackage{tikz-feynman}
+\usepackage{caption}
+\usepackage{physics}
+\usetikzlibrary{patterns}
+\usepackage{todonotes}
+\def\bZ{\mathbb{Z}}
+\def\cD{\mathcal{D}}
+\def\cM{\mathcal{M}}
+\def\cO{\mathcal{O}}
+\def\bR{\mathbb{R}}
+\DeclareMathOperator\len{len}
+\DeclareMathOperator\Id{Id}
+\newcommand\todojm[1]{\todo[inline]{JMM : #1}}
+
+\newtheorem{theorem}{Th\'eor\`eme}[section]
+\newtheorem{remark}[theorem]{Remarque}
+\newtheorem{lemma}[theorem]{Lemme}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollaire}
+\newtheorem{definition}[theorem]{D\'efinition}
+
+\usepackage[hidelinks]{hyperref}
+
+%pour insérer code éventuellement
+\usepackage{xcolor}
+\usepackage{mathtools,upgreek}
+\definecolor{keywordcolor}{rgb}{0.7, 0.1, 0.1}   % red
+\definecolor{tacticcolor}{rgb}{0.0, 0.1, 0.3}    % dark blue
+\definecolor{commentcolor}{rgb}{0.4, 0.4, 0.4}   % grey
+\definecolor{stringcolor}{rgb}{0.5, 0.3, 0.2}    % brown
+\definecolor{symbolcolor}{rgb}{0.1, 0.2, 0.7}    % blue
+\definecolor{sortcolor}{rgb}{0.1, 0.5, 0.1}      % green
+\definecolor{attributecolor}{rgb}{0.7, 0.1, 0.1} % red
+\definecolor{errorcolor}{rgb}{1, 0, 0}           % bright red
+
+\usepackage{listings}
+\def\lstlanguagefiles{lstlean.tex}
+\lstset{language=lean,breakatwhitespace}
+% fin code
+
+\renewcommand*\contentsname{\textsc{Table des matières}}
+\def\nbR{\ensuremath{\mathrm{I\! R}}}
+\usepackage{subcaption}
+\renewcommand\thesection{\Roman{section}}
+\pagestyle{fancy}
+\usepackage{graphicx}
+\fancyhf{}
+\rhead{2023}
+\lhead{\includegraphics[width=2cm]{ENScr.png}} % 1,7 avant pour width
+\chead{Rapport de stage L3}
+\cfoot{\thepage}
+\usepackage[nottoc]{tocbibind}
+\numberwithin{equation}{section}
+
+
+\begin{document}
+\topskip0pt
+\begin{center}
+    \includegraphics[width=0.5\textwidth]{ENSPS_UPSAY_logo_couleur_2.png}
+\end{center}
+
+\begin{center}
+    \vspace{30pt}
+    \Large\textsc{Ecole Normale Supérieure Paris-Saclay}
+    \\
+    \large\textsc{Département de Mathématiques}
+    \\
+    \textsc{}
+    \\
+    \rule{200pt}{0.5pt}
+    \\
+    \vspace{10pt}
+    {Stage de recherche - licence 3 mathématiques}
+    \\
+    \vspace{50pt}
+    \LARGE\textsc{Formalisation de l'algorithme du Fast-Marching ; Décomposition de Selling et consistance du schéma}
+    \\
+    \vspace{40pt}
+    \large{Rapport de stage de}
+
+    \Large\textsc{Matteo Guicheneuy et Angèle Lochet}
+    \\
+    \large{supervisés par}
+
+    \Large\textsc{Jean-Marie Mirabeau et Floris Van Doorn}
+
+    \vspace{40pt}
+    \rule{200pt}{0.5pt}
+
+    \vspace{10pt}
+    \large{28 Mars 2023 - 1 Juillet 2023}
+\end{center}
+\thispagestyle{empty}
+\newpage
+
+\tableofcontents
+\setcounter{page}{1}
+
+
+
+\newpage
+\section*{Résumé}
+
+\section{Problématique}
+
+\section{Introduction}
+\subsection{L'équation eikonale}
+L'équation eikonale nous vient de la physique, et plus précisément de l'optique, c'est l'équation qui permet de décrire la propagation de la lumière dans un milieu.
+Notre intérêt se porte sur cette équation en raison du fait qu'elle puisse être utilisé pour résoudre des problèmes de trajectoire optimale.
+
+\todojm{Mettre quelques références (optique, trajectoire optimale)}
+
+Commençons par introduire quelques notions importantes:
+
+On se place dans $\Omega$ un ouvert borné de $\bR^d$.
+Soit $\cM$ une métrique Riemannienne sur le domaine  $\Omega$:
+\begin{equation*}
+    \cM \in C^0(\bar{\Omega},S_d^{++})
+\end{equation*}
+Une métrique est un outil qui nous permet de mesurer des longueurs dans notre espace, On peut la voir comme une fonction qui à un point de $\bar{\Omega}$ associe une distance ($S_d^{++}$).
+
+\todojm{La fin de phrase ``une distance ($S_d^{++}$)''  n'est pas claire. Proposition : associe au point $x$ la norme sur l'espace tangent définie par la matrice $\cM(x)\in S_d^{++}$}
+
+A partir de la métrique on peut definir la longueur d'un chemin $\gamma: [0,1]\to \bar{\Omega}$, lipschitz:
+\begin{equation*}
+    \len_{\cM}(\gamma)=\int_0^1 \| \gamma'(t) \|_{\cM (\gamma(t))}dt.
+\end{equation*}
+Ainsi, on définit $u : \overline \Omega\to \bR$ la distance au bord de $\Omega$:
+\begin{equation*}
+    u(x) = \inf\{ \len_\cM(\gamma)\mid \gamma(0)=x, \gamma(1)\in \partial \Omega\}.
+\end{equation*}
+
+\todojm{Distinguer les égalités par définition ``$:=$'' de celles qui sont des propriétés ``$=$''}
+
+Il est possible de montrer que résoudre l'équation eikonale Riemannienne suivante:
+\begin{equation*}
+\begin{cases}
+    \| \nabla u(x) \|_{\cD(x)}=1, & x\in \Omega, \\
+    u(x)=0, & x \in \partial \Omega.
+\end{cases}
+\end{equation*}
+permet de trouver le chemin le plus court, qui atteint l'infimum dans la définition de $u(x)$,
+avec $\cD:=\cM^{-1}$
+\subsection{L'algorithme du fast-marching}
+
+Introduction du schéma isotrope dans Rouy \cite{rouy1992viscosity}.
+
+Preuve qu'il se résout en une passe sur le domaine dans \cite{tsitsiklis1995efficient,sethian1996fast}.
+
+Parler de qq généralisations ultérieures.
+
+\todo[inline]{Expliquer que, compte tenu de la difficulté de la formalisation, l'on s'est finalement focalisé sur deux lemmes importants : la décomposition de Selling et la consistance du schéma.}
+
+
+\subsection{L'assistant de preuve LEAN}
+
+Donner quelques motivations pour la formalisation \cite{massot2021formalize}.
+
+Exemples de projets.
+
+
+\section{Décomposition de Selling}
+
+\subsection{Présentation usuelle}
+
+\begin{definition}[Superbase]
+\label{def:Superbase}
+On dit que $(v_0,...,v_d) \in (\bZ^d)^{d+1} $ est une superbase, si cette famille de vecteurs vérifie :
+\begin{equation}
+    \sum_{0\leq i\leq d} v_i = 0 \text{ et } \lvert  \det (v_1,...,v_d)  \lvert  =  1
+\end{equation}
+\end{definition}
+
+Ex : Voir la Définition \ref{def:Superbase}
+
+Par la suite, fixons-nous un $x \in \Omega $ et notons $D \equiv \cD (x) $ avec $\cD (x)$ définie précédemment.
+Avec la définition \ref{def:Superbase}, nous pouvons montrer la formule de Selling, nécessaire pour l'algorithme du fast-marching :
+
+\todojm{Plus précisément, cette formule est nécessaire pour la version Riemannienne du fast marching. Citer la ref.}
+
+
+\begin{lemma}[Formule de Selling]
+\label{lem:FormuleSelling}
+ Soit $D \in S_d $. Soit $(v_0,...,v_d)$ une superbase. On a alors :
+\begin{equation}
+\label{AssociatedVectors}
+        D = - \sum_{0\leq i < j \leq d} \braket{ v_i }{ D v_j } e_{ij} e_{ij}^T \text{ avec } \braket{e_{ij}}{ v_k } = \delta_{ik} - \delta_{kj}
+\end{equation}
+Les vecteurs $e_{ij}$ se nomment les vecteurs associés.
+\end{lemma}
+
+\todo[inline]{
+Ca pourrait valoir la peine d'introduire les vecteurs associés dans un Lemme au dessus. (Et justifier qu'ils sont bien définis.)
+}
+
+
+\begin{proof}
+Pour plus de clarté, notons $D' =  - \sum_{0\leq i < j \leq d} \braket{ v_i}{ D  v_j } e_{ij} e_{ij}^T$. Calculons alors, pour tout couple $(k,l)$ tel que $0 \leq k < l \leq d $ :
+\begin{equation}
+\label{form_sell}
+    \begin{split}
+        \braket{v_k}{D' v_l} & = - \sum_{0\leq i < j \leq d}\braket{ v_i}{ D  v_j } v_{k}^T  e_{ij} e_{ij}^T v_l\\
+        & = - \sum_{0\leq i < j \leq d}\braket{ v_i}{ D  v_j }  \braket{v_{k}}{e_{ij}} \braket{e_{ij}}{v_l}\\
+        & = + \braket{ v_k }{ D  v_l } \\
+    \end{split}
+\end{equation}
+Pour passer de la deuxième à la dernière ligne, nous utilisons la définition des vecteurs $e_{ij}$ donnée par \ref{AssociatedVectors}, en simplifiant sachant que $k<l$ et que $i<j$. On obtient la même relation pour $k>l$ en suivant le même méchanisme (A VERIFIER).
+\\
+De plus, pour tout $i$, $\braket{v_i}{D' v_i} = \braket{v_i}{D v_i}$ : en effet il suffit de remplacer $v_i$ par $(-v_0-v_1-...-v_{i-1}-v_{i+1}-...-v_{d})$ (d'après la définition d'une superbase) et d'utiliser \ref{form_sell}.
+\end{proof}
+
+\todojm{Conclure : les formes quadratiques définies par $D$ et $D'$ ont même matrice dans la base $(v_1,\cdots,v_d)$.}
+
+
+\begin{definition}[famille D-obtuse]
+\label{Dobtuse}
+    On dit que $(v_0,...,v_d) \in (\bZ^d)^{d+1} $ est D-obtue avec $ D \in S_d^{++}$, si :
+    \begin{equation}
+    \braket{v_i}{D v_j} < 0  \forall  0\leq i < j \leq d
+\end{equation}
+\end{definition}
+
+\todojm{obtue -> obtuse}
+
+\todojm{Ne pas hésiter à commenter les points difficiles à formaliser des preuves. Eventuellement proposer des preuves alternatives qui se formalisent mieux.}
+
+{Lorsque $ D \in S_d^{++}$ (ce qui est le cas ici) et lorsque la superbase est D-obtuse, alors la formule de Selling est appelée décomposition de Selling. }
+
+\todojm{Eviter les accolades inutiles autour des paragraphes dans le code source. Crée des risques d'erreur.}
+
+{C'est cette décomposition qui est nécessaire dans l'algorithme du fast-marching. Il ne nous reste donc plus qu'à prouver l'existence d'une superbase D-obtuse, afin d'obtenir la décomposition de Selling. Cette démonstration est faite ici pour $d=2,3$ de manière constructive grâce à l'algorithme de Selling.}
+\paragraph{Schéma : algorithme de Selling pour $d = 2$:}
+
+{\let\clearpage\relax\include{algorithme de Selling}}
+
+\todojm{Utiliser le package enumerate, ou itemize.}
+
+\begin{enumerate}[I]
+    \item Premier point
+    \begin{enumerate}[{I.}1]
+        \item Premier sous-point
+        \item Deuxième sous-point
+    \end{enumerate}
+    \item Deuxième point
+\end{enumerate}
+
+
+{Il ne nous reste plus qu'à prouver que cet algorithme termine et qu'il renvoie bien une superbase D-obtuse.}
+\begin{proof}[Démonstration : Algorithme de Selling]
+La démonstration s'effectue en deux temps :
+\\
+I. Vérification que si l'algorithme termine, la base retournée est bien une superbase D - obtuse:
+\\
+
+\todojm{``La base retournée''. Une base de $Z^d$ a $d$ éléments, et non $d+1$. Dire plutôt la famille de vecteurs retournée ou le $(d+1)$-uplet retourné.}
+
+I.1. La base retournée par l'algorithme est bien une superbase : en effet, la famille
+\begin{equation}
+    (- v_0, v_1, v_0 - v_1)
+\end{equation}
+est bien une superbase si $(v_0,v_1,v_2)$ l'est car la somme des vecteurs est bien nulle et une simple manipulation du déterminant en utilisant que la somme des vecteurs est nulle montre que ces deux familles ont en valeur absolue le même déterminant. Cette transformation s'appelle la transformation de Selling. Ainsi, à chaque étape de la boucle while, nous conservons une superbase.
+\\
+\todojm{``L'algorithme termine'' essayer autant que possible d'avoir une exposition linéaire des résultats. Si ce n'est pas possible, bien faire référence au ``résultat ci-dessous''}
+I.2. L'algorithme termine, on obtient donc la négation de la condition while :
+\begin{equation}
+    \forall i, j, \braket{v_i}{D v_j} \leq 0
+\end{equation}
+D'où par définition d'une superbase D - obtuse, nous obtenons bien une superbase D -obtuse.
+\\
+
+II. Démonstration de la terminaison de l'algorithme :
+\\
+Il nous faut d'abord définir la notion de l'énergie d'une superbase :
+\begin{definition}[Energie $E_D$ d'une superbase $b$]
+\label{def:EnergieSuperbase}
+    \begin{equation}
+    E_D (b) = \sum_{0\leq i \leq d} \braket{v_i}{D v_i}
+\end{equation}
+\end{definition}
+
+\\
+
+à chaque étape, l'énergie de la superbase créée est inférieure strictement à celle précédente + nombre fini de superbase vérifiant cela --> terminaison de l'algorithme
+\end{proof}
+
+
+\subsection{Formalisation}
+
+Il nous faut d'abord définir les notions de superbases (D-obtuses) sur Lean. Une subtilité cependant : nous choisissons, sur Lean, de ne prendre en compte que les superbases directes (ie $\det (v_1,...,v_d) = 1 $). En effet, le temps de calcul sous Lean est à prendre en compte, et la séparation des cas du déterminant valant $+1$ ou $-1$ compliquait et prolongeait énormément les preuves. Afin d'obtenir les preuves pour le cas du déterminant négatif, il suffit d'appliquer les mêmes codes, avec la superbase indirecte (à quelques subtilités près).
+
+\begin{definition}[famille D - obtuse sous Lean]
+\label{DObtuseLean}
+
+\end{definition}
+
+
+\begin{definition}[Superbase directe sous Lean]
+\label{SuperbaseLean}
+    inserer code
+\end{definition}
+
+La première étape de ce stage consiste à montrer la formule de Selling. Un lemme préliminaire grandement nécessaire sous Lean, qui peut paraître évident à la main, est le suivant :
+\begin{lemma}
+\label{ExercisePartOne}
+    inserer code v0 = -v1 - v2
+\end{lemma}
+
+En voici une autre version similaire tout aussi utile :
+\begin{lemma}
+\label{ExercisePartOneVar}
+    inserer code v0 = -v1 - v2
+\end{lemma}
+
+\todojm{Discuter un peu de pourquoi ce n'est pas automatisé. (Somme finie sur un ensemble donné.  Les implifications comme linarith s'appliquent à des éléments d'anneaux plutôt que des vecteurs.)}
+
+Il nous faut maintenant définir les vecteurs associés. Le fait de les définir par rapport à un produit scalaire paraît difficile sur Lean, qui a besoin d'une expression explicite. Or pour $d=2$, il est possible d'obtenir une telle expression de ces vecteurs :
+\begin{lemma}
+\label{VectAssoc}
+    Soient $0\leq i < j \leq 2$. Soit $0 \leq k \leq 2$ tel que $k\ne i $ et $k \ne j$. Alors :
+    \begin{equation}
+        e_{ij}= \pm v_k^{\perp}
+    \end{equation}
+    Le signe est directement le signe de la permutation : $
+      \begin{pmatrix}
+    0 & 1 & 2 \\
+    i & j & k
+  \end{pmatrix} $
+\end{lemma}
+\begin{proof}
+    D'après la définition \ref{AssociatedVectors}, si $k\ne i $ et $k \ne j$ alors $\braket{e_{ij}}{ v_k } = 0$, soit $e_{ij} \in v_k^{\perp}$. Or nous sommes en dimension 3 donc $v_k^{\perp}$ correspond à la droite dirigée par :
+    \begin{equation}
+        v_k^{\perp} = \begin{pmatrix}
+            - (v_k)_1 \\
+              (v_k)_0
+        \end{pmatrix}
+    \end{equation}
+    Sous réserve d'orthonormalisation, on a donc bien : $e_{ij}= \pm v_k^{\perp}$. Pour le signe, il suffit de se rappeler que d'après \ref{AssociatedVectors} on doit aussi vérifier  $\braket{e_{ij}}{ v_i } = 1$ et $\braket{e_{ij}}{ v_j } = - 1$.
+
+
+
+\end{proof}
+\begin{lstlisting}
+// def B.1
+def is_superbase (v : matrix (fin (d+1)) (fin d) R) : Prop :=
+    \sum i, v i = 0 ∧ |(v.submatrix fin.succ id).det| = 1
+\end{lstlisting}
+
+Idée : faut-il remettre les définitions écrites en latex ? N'est-ce pas finalement bizarre de séparer, au moins pour les définitions faudrait-il les rappeler ?
+is direct superbase : choix de se réduire à des superbases dont le déterminant vaut 1, car ne change rien à la méthode mais change tout (nb de cas et tt) sur lean --> temps de calcul largement réduit (expliquer tactiques qui mettent du temps, car IA etc)
+Décrire les choix, les difficultés.
+
+Code : mettre les énoncés, et définitions, qq preuves si très courtes.
+(Le reste en annexe.)
+
+
+
+\section{Consistance du schéma}
+
+\subsection{Cas à 1 dimension}
+
+
+L'objectif de cette partie est de démontrer la consistance du schéma 1D ($\Omega\subset \bR$):
+\begin{lemma}
+Soit $u: \Omega \to \bR$ $C^1$, alors pour tout $x\in\Omega$.
+\begin{equation}
+    max(0,u(x)-u(x-h),u(x)-u(x+h))=|hu'(x)|+o(h)
+\end{equation}
+\end{lemma}
+
+
+\begin{proof}[Démonstration usuel]
+Commençons dans un premier temps par la démonstration usuel du schéma.
+
+Soit $x\in \Omega$.
+
+$u$ est une fonction différentiable sur $\Omega$, on a alors:
+\begin{equation*}
+\begin{split}
+    u(x)-u(x+h)-hu'(x)=o(h) \\
+    u(x)-u(x-h)+hu'(x)=o(h)
+\end{split}
+\end{equation*}
+Par 1-lispchitzianité du max(voir annexe) appliqué au vecteur $(0,u(x)-u(x+h),u(x)-u(x-h))$ et $(0,hu'(x),-hu'(x))$ on obtient l'inégalité suivante:
+\begin{equation*}
+\begin{split}
+    |max(0,u(x)-u(x+h),u(x)-u(x-h))-max(0,hu'(x),-hu'(x)) | \\ \le max(|0-0|,|u(x)-u(x+h)-hu'(x)|,|u(x)-u(x-h)+hu'(x)|)
+\end{split}
+\end{equation*}
+Soit après quelques simplifications:
+\begin{equation*}
+\begin{split}
+    |\max(0,u(x)-u(x+h),u(x)-u(x-h))-|hu'(x)||\\
+    \le \max(|u(x)-u(x+h)-hu'(x)|,|u(x)-u(x-h)+hu'(x)|)
+\end{split}
+\end{equation*}
+le max de deux petits $o$ reste un petit $o$, on en déduit le résultats escompté.
+\end{proof}
+
+Intéressons nous maintenant à la démonstration de la consistance sous Lean.
+\begin{proof}[Démonstration sous Lean]
+
+Dans un premier temps nous allons démontrer la 1-lipschitzianité du max pour des vecteur a 3 composantes.
+Cette démonstration se fait sans trop de difficulté à partir de la 1-lipschitzianité du max déjà présent dans Lean et de quelque inégalité sur le max (voir annexe).
+Avant de rentrer dans le coeur de la démonstration sous Lean intéressons nous à la définition des petits taux sous Lean.
+\begin{lstlisting}[gobble=2]
+    def is_o (l : filter α) (f : α → E) (g : α → F) :
+    Prop := ∀ ⦃c : ℝ⦄, 0 < c → is_O_with c l f g
+\end{lstlisting}
+Dans cette définition $f$ et $g$ sont des fonctions et $l$ est un ensemble contenant ... et $c$ est la constante de domination; le o est alors définit par un O définit ainsi:
+\begin{lstlisting}[gobble=2]
+    def is_O_with (c : ℝ) (l : filter α) (f : α → E) (g : α → F) : Prop :=
+    ∀ᶠ x in l, ‖ f x ‖ ≤ c * ‖ g x ‖
+\end{lstlisting}
+
+\begin{remark}[Filtres et composition des limites]
+
+\end{remark}
+
+Une première étape de la démonstration est de développer au maximum les hypothèses et l'objectif que l'on doit démontrer.
+On construit ensuite l'ensemble $W$ qui est le nouveau filtre. On a alors trois propositions à démontrer, les deux derniers sont simple à démonter, elles consistent à démontrer que $W$ est ouvert et qu'il contient $0$.
+Le premier point est le plus technique, c'est dans celui ci que l'on montre le coeur de la preuve. C'est dans cette partie que l'on utilise la lipschitzianité du max. Par un jeu d'inégalité et de reécriture on arrive a nos fins.
+Comme on peut le voir la preuve est long est très technique sous Lean, malgrès une preuve initiale simple.
+\begin{lstlisting}[gobble=2]
+    lemma max_0_u (u : ℝ → ℝ) (x u': ℝ) (hu : has_deriv_at u u' x) :
+    (λ h,  max 0 (max ((u x - u (x - h)) ) ((u x - u (x + h) ))) - |h  *u'|)=o[𝓝 0] λ  h, h :=
+    begin
+        -- Reecriture des définitions.
+        rw is_o_iff,-- reecriture de la definition de o dans l'objectif:
+        intros c hc,-- On fixe une
+        rw eventually_nhds_iff,
+        let h1 := (my_lemma u u' x).1 hu,
+        rw is_o_iff at h1,
+        specialize h1 hc,
+        rw eventually_nhds_iff at h1,
+        rcases h1 with ⟨V,  ⟨H, V_open, V0⟩⟩,
+
+        -- Definition de W
+        let W:= V ∩ -V,
+        use W,
+        split,
+
+        -- Coeur de la preuve:
+        {intros h Wh,
+        rw abs_eq_max_neg,
+        repeat{rw real.norm_eq_abs},
+        let max_diff := max_1_lip (u x - u (x - h))  (u x - u (x + h)) (h*u') (-(h  * u')) ,
+        rw ← abs_eq_max_neg at max_diff,
+        let P:= abs_nonneg (h * u'),
+        rw max_eq_right P at max_diff,
+        rw abs_eq_max_neg at max_diff,
+        rw abs_eq_max_neg at max_diff,
+        rw ← abs_eq_max_neg at max_diff,
+        let diffp := H h Wh.1,
+        repeat{rw real.norm_eq_abs at diffp},
+        let diffm := H (-h) Wh.2,
+        repeat{rw real.norm_eq_abs at diffm},
+        rw abs_neg at diffm,
+        rw ← abs_neg at diffm,
+        rw ← abs_neg at diffp,
+        let F := max_le diffp diffm,
+        rw max_comm at F,
+        apply le_trans max_diff _,
+        apply le_trans _ F,
+        simp only [← sub_eq_add_neg],
+        apply le_of_eq,
+        congr' 2; ring },
+        split,
+
+        -- Preuve que W est ouvert
+        {have V_neg_open := V_open.neg,
+         apply is_open.inter V_open V_neg_open,},
+
+         --Preuve que $0\in W$
+        {simp,
+        exact V0,},
+    end
+\end{lstlisting}
+\todo[inline]{Mettre des bouts de code illustrant les concepts Lean pour : o, max 1-Lip. Eventuellement parler du pb avec les valeurs dans $[0,\infty]$.}
+\end{proof}
+
+
+
+
+\subsection{Cas à 2 dimension}
+
+\todo[inline]{Utiliser l'environnement begin/end lemma, etc}
+
+Dans cette partie nous traiterons le cas à deux dimensions ($\Omega\subset \bR^2$).
+
+Par soucie de simplicité d'écriture définissons $\delta^e_hu$:
+\begin{definition}
+Soit $x\in \Omega$ et $e\in \bR^2$
+\begin{equation}
+    \delta^e_hu(x)=max(0,u(x)-u(x-he),u(x)-u(x+he))
+\end{equation}
+\end{definition}
+
+
+\todo[inline]{La consistance s'applique à toute fonction $u \in C^1$. (La distance au bord n'est pas $C^1$.)}
+
+\todo[inline]{Mettre une ref à la théorie des solutions de viscosité. Il suffit de vérifier la consistance sur les fonctions lisses, même si la fonction distance n'est pas lisse.
+Ref classique par exemple : Crandall et Lions, User's guide to viscosity solutions.
+}
+
+La consitance du schéma 2D est donné par le lemme suivant:
+\begin{lemma}
+\label{lemme:consistance_2D}
+Soit $u: \Omega \to \bR$ une fonction $C^1$, alors pour tout $x\in\Omega$.
+\begin{equation}
+     \sum_{e \in E}\lambda(e)(\delta_e^hu(x))^2 = h^2<\nabla u(x), D\nabla u(x)>+o(h^2)
+\end{equation}
+
+\end{lemma}
+Pour démontrer ce lemme nous allons avoir besoin d'un résultat intermédiaire:
+\begin{lemma}
+\label{lemme_intermédire}
+Soient $u: \Omega \to \bR$ différentiable sur tout $\Omega$ et $e\in \bR^2$, alors pour tout $x\in\Omega$:
+\begin{equation}
+    \delta^e_hu(x)=|h<\nabla u(x),e>|+o(h)
+\end{equation}
+\end{lemma}
+
+\begin{proof}[Démonstrastion usuelle du Lemme \ref{lemme_intermédire}]
+Commençons par la démonstration usuel du lemme IV.4.
+
+Soient $x\in \Omega$ et $e\in \bR^2$.
+
+Posons:
+\begin{equation*}
+\begin{array}{ccccc}
+    v &: & \bR & \to & \bR \\
+     & & t & \mapsto &  u(x+te)
+\end{array}
+\end{equation*}
+
+Par différentiabilité de $u$ en $x$, $v$ est dérivable en 0.
+
+Par un calcul élémentaire de calcul différentiel on a: $v'(0)=<\nabla u(x),e>$.
+
+En appliquant le lemme 4.1 à $v$, on obtient le résultat voulue.
+\end{proof}
+\begin{proof}[Démonstrastion sous Lean du Lemme \ref{lemme_intermédire}]
+  \label{Démonstration sous Lean du lemme 4.3:}
+  Démontrons maintenant ce même lemme sous lean.
+
+\end{proof}
+
+\begin{proof}[Démonstration usuelle du lemme\ref{lemme:consistance_2D}]
+Nous pouvons dès à présent nous atteler à la démonstration du lemme \ref{lemme:consistance_2D}:
+\begin{equation}
+    \begin{split}
+        \sum_{e \in E}\lambda(e)(\delta_e^hu(x))^2 & =\sum_{e \in E}\lambda(e)(|h<\nabla u(x),e>|+o(h))^2\\
+        & = h^2\sum_{e \in E}\lambda(e)|<\nabla u(x),e>|^2+o(h^2)\\
+        & = h^2\sum_{e \in E}\lambda(e)|Tr(\nabla u(x)\nabla u(x)^T ee^T)+o(h^2)\\
+        &  = h^2Tr(\nabla u(x)\nabla u(x)^T\sum_{e \in E}\lambda(e)ee^T)+o(h^2)\\
+        & = h^2Tr(\nabla u(x)\nabla u(x)^T D)+o(h^2)\\
+        & = h^2<\nabla u(x), D\nabla u(x)>+o(h^2)
+    \end{split}
+\end{equation}
+\end{proof}
+
+
+
+\section{Conclusion}
+\section{Remerciements}
+\section{Annexe}
+\subsection{Démonstration 1-lipsichianité du max}
+\paragraph{Lemme:} Soit $(x_i)_{1\le i\le N},(y_j)_{1\le j\le N}\in \bR^N$, alors:
+\begin{equation}
+    |max_{1\le i\le N}(x_i)-max_{1\le j\le N}(y_j)|\le max_{1\le i\le N}(|x_i-y_i|)
+\end{equation}
+\paragraph{Démonstration:}
+Considérons $(x_i)_{1\le i\le N},(y_j)_{1\le j\le N}\in \bR^N$.
+
+Supposons $max_{1\le i\le N}(x_i) \ge max_{1\le j\le N}(y_j)$.
+
+Posons $i_0\in [1,N]$ tel que $x_{i_0}=max_{1\le i\le N}(x_i)$.
+
+On a alors:
+\begin{equation}
+\begin{split}
+    |max_{1\le i\le N}(x_i)-max_{1\le j\le N}(y_j)| & = x_{i_0}-max_{1\le j\le N}(y_j) \\
+    & \le x_{i_0}- y_{i_0}\\
+    & \le |x_{i_0}- y_{i_0}|\\
+    & \le max_{1\le i\le N}(|x_i-y_i|)
+\end{split}
+\end{equation}
+Le cas $max_{1\le i\le N}(x_i) \le max_{1\le j\le N}(y_j)$ est symétrique.
+
+\begin{proof}
+\begin{lstlisting}[gobble=2]
+
+    lemma max_1_lip (a b c d :ℝ ) :
+        |(max 0 (max a b))-(max 0 (max c d))|≤ max (|a-c|) (|b-d|) :=
+    begin
+        let h1 := abs_max_sub_max_le_abs (max a b) (max c d) 0,
+        let h2 := abs_max_sub_max_le_max a b c d,
+        rw max_comm,
+        rw max_comm 0 (max c d),
+        exact le_trans h1 h2,
+    end
+\end{lstlisting}
+\end{proof}
+
+\section*{Exemple de code}
+
+A code example:
+\begin{lstlisting}[gobble=2]
+  theorem selling_algorithm (vsb : is_direct_superbase v) (vint : ∀ i j, v i j ∈ Z)
+    (Dsymm : D.is_symm) (Dposdef : D.pos_def) (hd : d = 2 ∨ d = 3) :
+    ∃ v' : matrix (fin (d+1)) (fin d) ℝ,
+      is_direct_superbase v' ∧ is_obtuse v' D ∧ ∀ i j, v' i j ∈ Z :=
+  sorry
+\end{lstlisting}
+We can also write the formula \lstinline{let f := λ x, x ^ 2} inline.
+
+$ x \vee y \wedge z \lambda {\color{symbolcolor}\ensuremath{\leq}} 3\uplambda$
+${\color{symbolcolor}\ensuremath{\forall}}$
+$ε$
+
+
+\end{document}
+

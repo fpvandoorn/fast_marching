@@ -1,0 +1,16 @@
+
+\begin{algorithm}
+
+\caption{Algorithme de Selling pour $d = 2$ : }
+\begin{algorithmic} 
+
+\REQUIRE $b = (e_0, e_1, e_2) $ superbase $ \land D \in S_d^{++}$
+\ENSURE we can construct $(v_0, v_1, v_2)$ superbase $D$-obtuse
+\STATE $(v_0, v_1, v_2) \leftarrow b $ 
+\WHILE{ there exists $i,j$ such that $\braket{v_i}{D v_j} > 0$}
+\STATE $(v_0, v_1, v_2) \leftarrow (- v_i, v_j, v_i - v_j )$
+\ENDWHILE
+\RETURN $(v_0, v_1, v_2)$
+
+\end{algorithmic}
+\end{algorithm}
