@@ -163,54 +163,54 @@ lemma max_0_u (u : ℝ → ℝ) (x u': ℝ) (hu : has_deriv_at u u' x) :
   (λ h,  max 0 (max ((u x - u (x - h)) ) ((u x - u (x + h) ))) - |h  *u'|)
   =o[𝓝 0] λ h, h :=
 begin
-rw is_o_iff,-- reecriture de la definition de o dans l'objectif:
+rw is_o_iff,-- réécriture de la definition de o dans l'objectif:
 --f =o[l] g ↔ ∀ ⦃c : ℝ⦄, 0 < c → (∀ᶠ (x : α) in l, ‖f x‖ ≤ c * ‖g x‖).
   intros c hc,-- On fixe une constante de domination c avec l'hypothèse hc qu'elle est positive.
-  rw eventually_nhds_iff,--on explicité plus précisément l'objectif avec la propriété:
+  rw eventually_nhds_iff,--on explicité plus précisément l'objectif avec la propriété eventually_nhds_iff:
   --(∀ᶠ (x : α) in 𝓝 a, p x) ↔ ∃ (t : set α), (∀ (x : α), x ∈ t → p x) ∧ is_open t ∧ a ∈ t.
-  -- TODO : introduire N a l'ensemble des voisinages de a
+  -- les o sont définit a partir du filtre de l'ensemble des voisinage de a.
 let h1 := (my_lemma u u' x).1 hu,-- A patir de la dérivabilité de u, on definit h1: u(x)-u(x+h)-hu'(x)=o(h).
 rw is_o_iff at h1,-- réecriture de h1
 -- Après simplification, on a h1:
 -- ∀ ⦃c : ℝ⦄, 0 < c → (∀ᶠ (x_1 : ℝ) in 𝓝 0, ‖u (x + x_1) - u x - x_1 * u'‖ ≤ c * ‖x_1‖).
 specialize h1 hc,-- on applique h1 à c.
-rw eventually_nhds_iff at h1,-- simplification dans h1 qui se réécrit:
+rw eventually_nhds_iff at h1,-- simplification dans h1 avec eventually_nhds_iff(voir si dessus); h1 se réécrit:
 -- ∃ (t : set ℝ), (∀ (x_1 : ℝ), x_1 ∈ t → ‖u (x + x_1) - u x - x_1 * u'‖ ≤ c * ‖x_1‖) ∧ is_open t ∧ 0 ∈ t.
--- TODO : "simplification" -> réécriture utilisant le filtre des voisinages d'un point. Voir ci-dessus
 rcases h1 with ⟨V,  ⟨H, V_open, V0⟩⟩,-- on fixe V l'enseble dont h1 donne l'existance. 
 -- On definit la proposition H: ∀ (x_1 : ℝ), x_1 ∈ V → ‖u (x + x_1) - u x - x_1 * u'‖ ≤ c * ‖x_1‖.
-let W:= V ∩ -V,--On définit un nouvel ensemble W.
--- TODO : expliquer que c'est nécessaire car on fait des différences finites à droite et à gauche
+let W:= V ∩ -V,--On définit un nouvel ensemble W sur lequel on a les diffférences finis à droite et à gauche.
 -- On cherche à prouver: (t : set ℝ), (∀ (x_1 : ℝ), x_1 ∈ t 
 -- → ‖max 0 (max (u x - u (x - x_1)) (u x - u (x + x_1))) - |x_1 * u'|‖ ≤ c * ‖x_1‖) ∧ is_open t ∧ 0 ∈ t.
 use W,-- On utilise W dans l'objectif.
 split,-- On sépare les propositions à prouver.
 {intros h Wh,
 --Dans cette partie on doit démontrer: ‖max 0 (max (u x - u (x - h)) (u x - u (x + h))) - |h * u'|‖ ≤ c * ‖h‖.
-  rw abs_eq_max_neg, -- TODO : détailler
-  repeat{rw real.norm_eq_abs},  -- TODO : détailler
+  rw abs_eq_max_neg, -- On utilise  |a| = max a (-a).
+  repeat{rw real.norm_eq_abs},  -- On utilise ‖r‖ = |r|.
   --On utilise la 1-lip du max aux bons éléments.
   let max_diff := max_1_lip (u x - u (x - h))  (u x - u (x + h)) (h*u') (-(h * u')) ,
+  --On effectue plusieur récriture pour remplacer max 0 (max (h * u') (-(h * u')) par max (h * u') (-(h * u') dans max_diff.
+  -- C'est laborieu, je n'ai pas trouvé de preuve plus courte.
   rw ← abs_eq_max_neg at max_diff,
   let P:= abs_nonneg (h * u'),
   rw max_eq_right P at max_diff,
   rw abs_eq_max_neg at max_diff,
   rw abs_eq_max_neg at max_diff,
   rw ← abs_eq_max_neg at max_diff,
-  --Après quelques simplification.
-  let diffp := H h Wh.1,-- On applique H à h.-- Pointeur vers la ligne definissant H. Dire le truc obte
-  repeat{rw real.norm_eq_abs at diffp},
-  let diffm := H (-h) Wh.2,-- On applique H à -h.
-  repeat{rw real.norm_eq_abs at diffm},
-  rw abs_neg at diffm,
-  rw ← abs_neg at diffm,
-  rw ← abs_neg at diffp,
-  let F := max_le diffp diffm,
+  let diffp := H h Wh.1,-- On definit diffp comme H(voir ligne 180) appliqué à h.
+  repeat{rw real.norm_eq_abs at diffp},-- On utilise ‖r‖ = |r| dans diffp.
+  let diffm := H (-h) Wh.2,---- On definit diffp comme H appliqué à -h.
+  repeat{rw real.norm_eq_abs at diffm},-- On utilise ‖r‖ = |r| dans diffm.
+  rw abs_neg at diffm,-- On utilise  | -a| = |a| dans diffm.
+  rw ← abs_neg at diffm,-- On utilise  | -a| = |a| dans diffm.
+  rw ← abs_neg at diffp,-- On utilise  | -a| = |a| dans diffp.
   -- On utilise la propriété a ≤ c → b ≤ c → max a b ≤ c pour définir une nouvelle proposition.
   -- F:max |-(u (x + h) - u x - h * u')| |-(u (x + -h) - u x - -h * u')| ≤ c * |h|
-  rw max_comm at F,
+  let F := max_le diffp diffm,
+  rw max_comm at F,-- On utilise la commutativité du max dans F.
   apply le_trans max_diff _,-- On ulitise la transitivité de la relation d'ordre pour conclure
   apply le_trans _ F,
+  --Après quelques réécriture cette partie de la preuve est finie.
   simp only [← sub_eq_add_neg],
   apply le_of_eq,
   congr' 2; ring },
@@ -220,7 +220,7 @@ split,
   apply is_open.inter V_open V_neg_open,-- L'intersection de deux ouverts est ouvert.
   },
 {-- Dans cette partie on montre que 0∈W.
-  simp,-- On utilise la tactique simp pour que Lean prouve par lui même le résultats.
+  simp,-- On utilise la tactique simp pour que Lean prouve par lui même le résultats, c'est un succé.
 exact V0,},
 end
 
@@ -240,15 +240,12 @@ def j (u : ℝ2 → ℝ) (x e:ℝ2) (t: ℝ):= u(x+t•e)
 
 
 -- TODO : replace du : ℝ2 →L[ℝ] ℝ with gradu : ℝ2
+
 lemma max_o_u_2D (u : ℝ2 → ℝ) (x e : ℝ2) (du : ℝ2 →L[ℝ] ℝ) (hu : has_fderiv_at u du x) :
 (λ (h :ℝ), upwind_fd u x (h•e) - |h *(du e)|  )
  =o[𝓝 0] λ (h : ℝ), h :=
 begin
-
 let v : ℝ → ℝ2 := λ t:ℝ,  x+t•e,
---let idℝℝ := continuous_linear_map.id ℝ ℝ,
---let dv := idℝℝ.smul_right e,
-
 have hv : has_deriv_at v e 0,
 {
   unfold has_deriv_at,
